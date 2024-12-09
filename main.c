@@ -19,18 +19,18 @@ QActiveCB const Q_ROM Q_ROM_VAR QF_active[] = {
 Q_ASSERT_COMPILE(QF_MAX_ACTIVE == Q_DIM(QF_active) - 1);
 
 // Do not edit main, unless you have a really good reason
-int main(void) {
-
-	Xil_ICacheInvalidate();
-	Xil_ICacheEnable();
-	Xil_DCacheInvalidate();
-	Xil_DCacheEnable();
-
-	Lab2A_ctor(); // inside of lab2a.c
-	BSP_init(); // inside of bsp.c, starts out empty!
-	QF_run(); // inside of qfn.c
-	return 0;
-}
+//int main(void) {
+//
+//	Xil_ICacheInvalidate();
+//	Xil_ICacheEnable();
+//	Xil_DCacheInvalidate();
+//	Xil_DCacheEnable();
+//
+//	Lab2A_ctor(); // inside of lab2a.c
+//	BSP_init(); // inside of bsp.c, starts out empty!
+//	QF_run(); // inside of qfn.c
+//	return 0;
+//}
 
 void printDebugLog() {
 	int size = Q_DIM(QF_active);
