@@ -35,6 +35,14 @@
  */
 
 #include "driver_mpu6050_interface.h"
+#include "xparameters.h"
+#include "xiic.h"
+#include "xil_printf.h"
+#include "sleep.h"
+
+#define IIC_DEVICE_ID	   XPAR_IIC_0_DEVICE_ID
+
+static XIic IicInstance;
 
 /**
  * @brief  interface iic bus init
@@ -45,7 +53,48 @@
  */
 uint8_t mpu6050_interface_iic_init(void)
 {
-    return 0;
+    int Status;
+    XIic_Config *ConfigPtr;
+
+    // Look up the configuration for the IIC device
+    ConfigPtr = XIic_LookupConfig(IIC_DEVICE_ID);
+    if (ConfigPtr == NULL)
+    {
+        xil_printf("Error: IIC configuration not found.\n");
+        return 1;  // Configuration not found
+    }
+
+    // Initialize the IIC instance with the configuration
+    Status = XIic_CfgInitialize(&IicInstance, ConfigPtr, ConfigPtr->BaseAddress);
+    if (Status != XST_SUCCESS)
+    {
+        xil_printf("Error: IIC initialization failed.\n");
+        return 2;  // Initialization failed
+    }
+
+    // Start the IIC device
+    Status = XIic_Start(&IicInstance);
+    if (Status != XST_SUCCESS)
+    {
+        xil_printf("Error: IIC start failed.\n");
+        return 3;  // Failed to start IIC
+    }
+
+    // Verify that the IIC bus is ready
+    if (XIic_IsIicBusy(&IicInstance))
+    {
+        xil_printf("Error: IIC bus is busy.\n");
+        return 4;  // IIC bus is busy
+    }
+
+    // Enable repeated start option
+    XIic_SetOptions(&IicInstance, XII_REPEATED_START_OPTION);
+
+    // Set the 7-bit MPU6050 address (0x68 if AD0=0, or 0x69 if AD0=1)
+    XIic_SetAddress(&IicInstance, XII_ADDR_TO_SEND_TYPE, 0x68);
+
+    xil_printf("IIC interface initialized successfully.\n");
+    return 0;  // Success
 }
 
 /**
@@ -57,7 +106,17 @@ uint8_t mpu6050_interface_iic_init(void)
  */
 uint8_t mpu6050_interface_iic_deinit(void)
 {
-    return 0;
+    int status;
+
+    // Stop the IIC driver
+    status = XIic_Stop(&IicInstance);
+    if (status != XST_SUCCESS)
+    {
+        xil_printf("IIC deinit failed with status: %d\n", status);
+        return 1; // Deinit failed
+    }
+
+    return 0; // Success
 }
 
 /**
@@ -73,7 +132,37 @@ uint8_t mpu6050_interface_iic_deinit(void)
  */
 uint8_t mpu6050_interface_iic_read(uint8_t addr, uint8_t reg, uint8_t *buf, uint16_t len)
 {
-    return 0;
+    int status;
+    uint8_t tx_buf = reg;
+
+
+    //xil_printf("IIC Read: Addr=0x%X, Reg=0x%X, Len=%d\n", addr, reg, len);
+
+    // Send register address
+    status = XIic_MasterSend(&IicInstance, &tx_buf, 1);
+    if (status != XST_SUCCESS)
+    {
+        xil_printf("IIC Write (Register Address) failed: %d\n", status);
+        return 1;
+    }
+
+    // Receive data
+    status = XIic_MasterRecv(&IicInstance, buf, len);
+    if (status != XST_SUCCESS)
+    {
+        xil_printf("IIC Read (Data) failed: %d\n", status);
+        return 1;
+    }
+
+    // Print out received data
+	xil_printf("Received Data: ");
+	for (uint16_t i = 0; i < len; i++)
+	{
+	   xil_printf("0x%X ", buf[i]);
+	}
+	xil_printf("\n");
+
+    return 0; // Success
 }
 
 /**
@@ -89,7 +178,23 @@ uint8_t mpu6050_interface_iic_read(uint8_t addr, uint8_t reg, uint8_t *buf, uint
  */
 uint8_t mpu6050_interface_iic_write(uint8_t addr, uint8_t reg, uint8_t *buf, uint16_t len)
 {
-    return 0;
+    int status;
+    uint8_t data[len + 1];
+
+    // Prepare the data buffer (register address + data)
+    data[0] = reg; // First byte is the register address
+    for (uint16_t i = 0; i < len; i++) {
+        data[i + 1] = buf[i]; // Remaining bytes are the data to write
+    }
+
+    // Perform the I2C write operation
+    status = XIic_MasterSend(&IicInstance, data, len + 1);
+    if (status != XST_SUCCESS) {
+        xil_printf("IIC write failed with status: %d\n", status);
+        return 1; // Write failed
+    }
+
+    return 0; // Success
 }
 
 /**
@@ -99,7 +204,7 @@ uint8_t mpu6050_interface_iic_write(uint8_t addr, uint8_t reg, uint8_t *buf, uin
  */
 void mpu6050_interface_delay_ms(uint32_t ms)
 {
-
+    usleep(ms * 1000); // Convert milliseconds to microseconds
 }
 
 /**
@@ -107,9 +212,26 @@ void mpu6050_interface_delay_ms(uint32_t ms)
  * @param[in] fmt is the format data
  * @note      none
  */
+#define DEBUG_BUFFER_SIZE 256  // Define a buffer size for formatted messages
+#include "xil_printf.h"
+#include <stdarg.h>
+#include <stdio.h>
 void mpu6050_interface_debug_print(const char *const fmt, ...)
 {
+	char buffer[DEBUG_BUFFER_SIZE];
+	va_list args;
 
+	// Initialize the variable argument list
+	va_start(args, fmt);
+
+	// Format the string into the buffer
+	vsnprintf(buffer, DEBUG_BUFFER_SIZE, fmt, args);
+
+	// Clean up the variable argument list
+	va_end(args);
+
+	// Print the formatted string using xil_printf
+	xil_printf("%s", buffer);
 }
 
 /**

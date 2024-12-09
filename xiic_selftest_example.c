@@ -37,6 +37,9 @@
 #include "xparameters.h"
 #include "xiic.h"
 #include "xil_printf.h"
+#include "mpu_6050/driver_mpu6050_read_test.h"
+#include "mpu_6050/driver_mpu6050.h"
+
 
 /************************** Constant Definitions ******************************/
 
@@ -145,20 +148,22 @@ int IicSelfTestExample(UINTPTR BaseAddress)
 		return XST_FAILURE;
 	}
 
-	Status = XIic_CfgInitialize(&Iic, ConfigPtr, ConfigPtr->BaseAddress);
-	if (Status != XST_SUCCESS) {
-		return XST_FAILURE;
-	}
+	mpu6050_read_test(MPU6050_ADDRESS_AD0_LOW, 1);
 
-
-	/*
-	 * Perform a self-test to ensure that the hardware was built
-	 * correctly.
-	 */
-	Status = XIic_SelfTest(&Iic);
-	if (Status != XST_SUCCESS) {
-		return XST_FAILURE;
-	}
+//	Status = XIic_CfgInitialize(&Iic, ConfigPtr, ConfigPtr->BaseAddress);
+//	if (Status != XST_SUCCESS) {
+//		return XST_FAILURE;
+//	}
+//
+//
+//	/*
+//	 * Perform a self-test to ensure that the hardware was built
+//	 * correctly.
+//	 */
+//	Status = XIic_SelfTest(&Iic);
+//	if (Status != XST_SUCCESS) {
+//		return XST_FAILURE;
+//	}
 
 	return XST_SUCCESS;
 }
