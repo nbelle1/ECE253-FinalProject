@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "/Users/dakotabarnes/Develop/ece253/ECE253-FinalProject",
+      "program": "/Users/dakotabarnes/Develop/ece253/ECE253-FinalProject/build/Debug/outDebug"
+    }
+  ]
+}
