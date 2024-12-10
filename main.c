@@ -1,19 +1,19 @@
 /*****************************************************************************
-* main.c for Lab2A of ECE 153a at UCSB
+* main.c for InclineDisplay of ECE 153a at UCSB
 * Date of the Last Update:  November 1,2020
 *****************************************************************************/
 
 #include "qpn_port.h"                                       /* QP-nano port */
 #include "bsp.h"                             /* Board Support Package (BSP) */
-#include "lab2a.h"                               /* application interface */
+#include "incline_display.h"                               /* application interface */
 #include "xil_cache.h"		                /* Cache Drivers */
 
 
-static QEvent l_lab2aQueue[30];  
+static QEvent l_InclineDisplayQueue[30];  
 
 QActiveCB const Q_ROM Q_ROM_VAR QF_active[] = {
 	{ (QActive *)0,            (QEvent *)0,          0                    },
-	{ (QActive *)&AO_Lab2A,    l_lab2aQueue,         Q_DIM(l_lab2aQueue)  }
+	{ (QActive *)&AO_InclineDisplay,    l_InclineDisplayQueue,         Q_DIM(l_InclineDisplayQueue)  }
 };
 
 Q_ASSERT_COMPILE(QF_MAX_ACTIVE == Q_DIM(QF_active) - 1);
@@ -26,7 +26,7 @@ Q_ASSERT_COMPILE(QF_MAX_ACTIVE == Q_DIM(QF_active) - 1);
 //	Xil_DCacheInvalidate();
 //	Xil_DCacheEnable();
 //
-//	Lab2A_ctor(); // inside of lab2a.c
+//	InclineDisplay_ctor(); // inside of incline_display.c
 //	BSP_init(); // inside of bsp.c, starts out empty!
 //	QF_run(); // inside of qfn.c
 //	return 0;
