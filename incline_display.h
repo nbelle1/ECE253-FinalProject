@@ -1,12 +1,12 @@
 /*****************************************************************************
-* lab2a.h for Lab2A of ECE 153a at UCSB
+* incline_display.h for InclineDisplay of ECE 153a at UCSB
 * Date of the Last Update:  October 23,2014
 *****************************************************************************/
 
-#ifndef lab2a_h
-#define lab2a_h
+#ifndef InclineDisplay_h
+#define InclineDisplay_h
 
-enum Lab2ASignals {
+enum InclineDisplaySignals {
 	ENCODER_UP = Q_USER_SIG,
 	ENCODER_DOWN,
 	ENCODER_CLICK,
@@ -19,10 +19,10 @@ enum Lab2ASignals {
 };
 
 
-extern struct Lab2ATag AO_Lab2A;
+extern struct InclineDisplayTag AO_InclineDisplay;
 
 
-void Lab2A_ctor(void);
+void InclineDisplay_ctor(void);
 void GpioHandler(void *CallbackRef);
 void TwistHandler(void *CallbackRef);
 

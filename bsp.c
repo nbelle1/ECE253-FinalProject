@@ -1,12 +1,12 @@
 /*****************************************************************************
-* bsp.c for Lab2A of ECE 153a at UCSB
+* bsp.c for InclineDisplay of ECE 153a at UCSB
 * Date of the Last Update:  October 27,2019
 *****************************************************************************/
 
 /**/
 #include "qpn_port.h"
 #include "bsp.h"
-#include "lab2a.h"
+#include "InclineDisplay.h"
 #include "xintc.h"
 #include "xtmrctr.h"
 #include "xil_exception.h"
@@ -105,24 +105,6 @@ void BSP_init(void) {
 	}
 	xil_printf("Connected to Button Interrupt Controller!\r\n");
 
-
-//	// Start interrupt controller
-//	Status = XIntc_Start(&sys_intc, XIN_REAL_MODE);
-//	if (Status != XST_SUCCESS) {
-//		xil_printf("Interrupt controller driver failed to start...\r\n");
-//		return;
-//	}
-//	xil_printf("Started Interrupt Controller!\r\n");
-//
-//
-//
-//	// Enable timer, button, and encoder interrupts
-//	XIntc_Enable(&sys_intc, XPAR_MICROBLAZE_0_AXI_INTC_AXI_TIMER_0_INTERRUPT_INTR);
-//	XIntc_Enable(&sys_intc, XPAR_MICROBLAZE_0_AXI_INTC_ENCODER_IP2INTC_IRPT_INTR);
-//	XIntc_Enable(&sys_intc, XPAR_MICROBLAZE_0_AXI_INTC_AXI_GPIO_BTN_IP2INTC_IRPT_INTR);
-
-
-
 	// Initialize Encoder GPIO
 	XGpio_Initialize(&EncoderGpio, XPAR_ENCODER_DEVICE_ID);
 	XGpio_InterruptEnable(&EncoderGpio, 1);
@@ -174,6 +156,9 @@ void BSP_init(void) {
 	initLCD();
 	clrScr();
 
+	//TODO: Initialize I2C And Accelerometer
+
+
 	// Register interrupts
 	microblaze_register_handler(
 			(XInterruptHandler) XIntc_DeviceInterruptHandler,
@@ -192,13 +177,6 @@ void QF_onStartup(void) {                 /* entered with interrupts locked */
 /* Enable interrupts */
 	xil_printf("\n\rQF_onStartup\n"); // Comment out once you are in your complete program
 
-	// Press Knob
-	// Enable interrupt controller
-	// Start interupt controller
-	// register handler with Microblaze
-	// Global enable of interrupt
-	// Enable interrupt on the GPIO
-
 
 	 //Start interrupt controller
 	XStatus Status = XIntc_Start(&sys_intc, XIN_REAL_MODE);
@@ -215,34 +193,6 @@ void QF_onStartup(void) {                 /* entered with interrupts locked */
 	XIntc_Enable(&sys_intc, XPAR_MICROBLAZE_0_AXI_INTC_ENCODER_IP2INTC_IRPT_INTR);
 	XIntc_Enable(&sys_intc, XPAR_MICROBLAZE_0_AXI_INTC_AXI_GPIO_BTN_IP2INTC_IRPT_INTR);
 
-	// Twist Knob
-
-	// General
-	// Initialize Exceptions
-	// Press Knob
-	// Register Exception
-	// Twist Knob
-	// Register Exception
-	// General
-	// Enable Exception
-
-	// Variables for reading Microblaze registers to debug your interrupts.
-//	{
-//		u32 axi_ISR =  Xil_In32(intcPress.BaseAddress + XIN_ISR_OFFSET);
-//		u32 axi_IPR =  Xil_In32(intcPress.BaseAddress + XIN_IPR_OFFSET);
-//		u32 axi_IER =  Xil_In32(intcPress.BaseAddress + XIN_IER_OFFSET);
-//		u32 axi_IAR =  Xil_In32(intcPress.BaseAddress + XIN_IAR_OFFSET);
-//		u32 axi_SIE =  Xil_In32(intcPress.BaseAddress + XIN_SIE_OFFSET);
-//		u32 axi_CIE =  Xil_In32(intcPress.BaseAddress + XIN_CIE_OFFSET);
-//		u32 axi_IVR =  Xil_In32(intcPress.BaseAddress + XIN_IVR_OFFSET);
-//		u32 axi_MER =  Xil_In32(intcPress.BaseAddress + XIN_MER_OFFSET);
-//		u32 axi_IMR =  Xil_In32(intcPress.BaseAddress + XIN_IMR_OFFSET);
-//		u32 axi_ILR =  Xil_In32(intcPress.BaseAddress + XIN_ILR_OFFSET) ;
-//		u32 axi_IVAR = Xil_In32(intcPress.BaseAddress + XIN_IVAR_OFFSET);
-//		u32 gpioTestIER  = Xil_In32(sw_Gpio.BaseAddress + XGPIO_IER_OFFSET);
-//		u32 gpioTestISR  = Xil_In32(sw_Gpio.BaseAddress  + XGPIO_ISR_OFFSET ) & 0x00000003; // & 0xMASK
-//		u32 gpioTestGIER = Xil_In32(sw_Gpio.BaseAddress  + XGPIO_GIE_OFFSET ) & 0x80000000; // & 0xMASK
-//	}
 }
 
 
@@ -251,32 +201,6 @@ void QF_onIdle(void) {        /* entered with interrupts locked */
     QF_INT_UNLOCK();                       /* unlock interrupts */
 
     {
-    	// Write code to increment your interrupt counter here.
-    	// QActive_postISR((QActive *)&AO_Lab2A, ENCODER_DOWN); is used to post an event to your FSM
-
-
-// 			Useful for Debugging, and understanding your Microblaze registers.
-//    		u32 axi_ISR =  Xil_In32(intcPress.BaseAddress + XIN_ISR_OFFSET);
-//    	    u32 axi_IPR =  Xil_In32(intcPress.BaseAddress + XIN_IPR_OFFSET);
-//    	    u32 axi_IER =  Xil_In32(intcPress.BaseAddress + XIN_IER_OFFSET);
-//
-//    	    u32 axi_IAR =  Xil_In32(intcPress.BaseAddress + XIN_IAR_OFFSET);
-//    	    u32 axi_SIE =  Xil_In32(intcPress.BaseAddress + XIN_SIE_OFFSET);
-//    	    u32 axi_CIE =  Xil_In32(intcPress.BaseAddress + XIN_CIE_OFFSET);
-//    	    u32 axi_IVR =  Xil_In32(intcPress.BaseAddress + XIN_IVR_OFFSET);
-//    	    u32 axi_MER =  Xil_In32(intcPress.BaseAddress + XIN_MER_OFFSET);
-//    	    u32 axi_IMR =  Xil_In32(intcPress.BaseAddress + XIN_IMR_OFFSET);
-//    	    u32 axi_ILR =  Xil_In32(intcPress.BaseAddress + XIN_ILR_OFFSET) ;
-//    	    u32 axi_IVAR = Xil_In32(intcPress.BaseAddress + XIN_IVAR_OFFSET);
-//
-//    	    // Expect to see 0x00000001
-//    	    u32 gpioTestIER  = Xil_In32(sw_Gpio.BaseAddress + XGPIO_IER_OFFSET);
-//    	    // Expect to see 0x00000001
-//    	    u32 gpioTestISR  = Xil_In32(sw_Gpio.BaseAddress  + XGPIO_ISR_OFFSET ) & 0x00000003;
-//
-//    	    // Expect to see 0x80000000 in GIER
-//    		u32 gpioTestGIER = Xil_In32(sw_Gpio.BaseAddress  + XGPIO_GIE_OFFSET ) & 0x80000000;
-
 
     }
 }
@@ -292,10 +216,10 @@ void Q_onAssert(char const Q_ROM * const Q_ROM_VAR file, int line) {
     }
 }
 
-/* Interrupt handler functions here.  Do not forget to include them in lab2a.h!
+/* Interrupt handler functions here.  Do not forget to include them in InclineDisplay.h!
 To post an event from an ISR, use this template:
-QActive_postISR((QActive *)&AO_Lab2A, SIGNALHERE);
-Where the Signals are defined in lab2a.h  */
+QActive_postISR((QActive *)&AO_InclineDisplay, SIGNALHERE);
+Where the Signals are defined in InclineDisplay.h  */
 
 /******************************************************************************
 *
@@ -314,15 +238,7 @@ void timer_handler() {
 	ControlStatusReg = XTimerCtr_ReadReg(sys_tmrctr.BaseAddress, 0, XTC_TCSR_OFFSET);
 
 
-
-	if(sleep_count == 2000){
-		QActive_postISR((QActive *)&AO_Lab2A, TIMER_SLEEP);
-	}
-	sleep_count++;
-	//Xil_Out32(XPAR_AXI_GPIO_LED_BASEADDR, 0b1000000000100010);
-
-
-
+	//TODO: Create New Timer Interrupts
 
 	/*
 	 * Acknowledge the interrupt by clearing the interrupt
@@ -362,7 +278,7 @@ void encoder_handler(void *CallbackRef){
 	if(cur_pin == BUTTON_DOWN){
 		//Send Encoder Down Signal
 		//xil_printf("Encoder Click Signal\n");
-    	QActive_postISR((QActive *)&AO_Lab2A, ENCODER_CLICK);
+    	QActive_postISR((QActive *)&AO_InclineDisplay, ENCODER_CLICK);
 
 		//Time Based De-bouncing
 		usleep(200000);
@@ -429,7 +345,7 @@ void encoder_handler(void *CallbackRef){
 					case P1HIGH_P2HIGH:
 						//Update LED CCW
 						//xil_printf("Encoder Down Signal\n");
-						QActive_postISR((QActive *)&AO_Lab2A, ENCODER_DOWN);
+						QActive_postISR((QActive *)&AO_InclineDisplay, ENCODER_DOWN);
 
 						//current_position = led_left(current_position);
 						current_encoder_state = S0_START;
@@ -444,7 +360,7 @@ void encoder_handler(void *CallbackRef){
 					case P1HIGH_P2HIGH:
 						//Update LED CW
 						//xil_printf("Encoder Right Signal\n");
-						QActive_postISR((QActive *)&AO_Lab2A, ENCODER_UP);
+						QActive_postISR((QActive *)&AO_InclineDisplay, ENCODER_UP);
 
 						current_encoder_state = S0_START;
 						//current_position = led_right(current_position);
@@ -471,53 +387,29 @@ void button_handler(void *CallbackRef){
 
 	//Handle Count Up
 	if(btn == 1){
-		QActive_postISR((QActive *)&AO_Lab2A, TOP_BUTTON);
+		QActive_postISR((QActive *)&AO_InclineDisplay, TOP_BUTTON);
 	}
 
 	// Handle Timer Start
 	else if(btn == 2){
-		QActive_postISR((QActive *)&AO_Lab2A, LEFT_BUTTON);
+		QActive_postISR((QActive *)&AO_InclineDisplay, LEFT_BUTTON);
 	}
 
 	//Handle Timer Stop
 	else if(btn == 4){
-		QActive_postISR((QActive *)&AO_Lab2A, RIGHT_BUTTON);
+		QActive_postISR((QActive *)&AO_InclineDisplay, RIGHT_BUTTON);
 	}
 
 	// Handle Count Down
 	else if(btn == 8){
-		QActive_postISR((QActive *)&AO_Lab2A, BOTTOM_BUTTON);
+		QActive_postISR((QActive *)&AO_InclineDisplay, BOTTOM_BUTTON);
 	}
 
 	// Handle Reset
 	else if(btn == 16){
-		QActive_postISR((QActive *)&AO_Lab2A, MIDDLE_BUTTON);
+		QActive_postISR((QActive *)&AO_InclineDisplay, MIDDLE_BUTTON);
 	}
 
 
 	XGpio_InterruptClear(GpioPtr, 1);
 }
-
-
-
-
-
-
-//void GpioHandler(void *CallbackRef) {
-//	// Increment A counter
-//}
-//
-//void TwistHandler(void *CallbackRef) {
-//	//XGpio_DiscreteRead( &twist_Gpio, 1);
-//
-//}
-//
-//void debounceTwistInterrupt(){
-//	// Read both lines here? What is twist[0] and twist[1]?
-//	// How can you use reading from the two GPIO twist input pins to figure out which way the twist is going?
-//}
-//
-//void debounceInterrupt() {
-//	QActive_postISR((QActive *)&AO_Lab2A, ENCODER_CLICK);
-//	// XGpio_InterruptClear(&sw_Gpio, GPIO_CHANNEL1); // (Example, need to fill in your own parameters
-//}

@@ -1,5 +1,5 @@
 /*****************************************************************************
-* bsp.h for Lab2A of ECE 153a at UCSB
+* bsp.h for InclineDisplay of ECE 153a at UCSB
 * Date of the Last Update:  October 23,2014
 *****************************************************************************/
 #ifndef bsp_h
