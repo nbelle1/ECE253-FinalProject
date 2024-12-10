@@ -211,7 +211,7 @@ uint8_t mpu6050_interface_iic_write(uint8_t addr, uint8_t reg, uint8_t *buf, uin
  */
 void mpu6050_interface_delay_ms(uint32_t ms)
 {
-    usleep(ms * 100); // Convert milliseconds to microseconds
+    usleep(ms * 20); // Convert milliseconds to microseconds
 }
 
 /**

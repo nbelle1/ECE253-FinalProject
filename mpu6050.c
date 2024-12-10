@@ -55,13 +55,29 @@
 
 /**************************** Type Definitions ********************************/
 
+// Data structure for MPU6050 readings
+typedef struct {
+    float accel_x;
+    float accel_y;
+    float accel_z;
+    float gyro_x;
+    float gyro_y;
+    float gyro_z;
+} mpu_data_t;
+
 
 /***************** Macros (Inline Functions) Definitions **********************/
 
 
 /************************** Function Prototypes *******************************/
 
-int gather_MPU_data(u16 DeviceId);
+
+
+int mpu_data_read_test();
+int mpu_init();
+int mpu_deinit();
+mpu_data_t get_mpu_data();
+
 
 /************************** Variable Definitions ******************************/
 
@@ -70,6 +86,8 @@ int gather_MPU_data(u16 DeviceId);
  * easily accessible from a debugger.
  */
 XIic Iic; /* The driver instance for IIC Device */
+
+
 
 
 /******************************************************************************/
@@ -93,49 +111,120 @@ int main(void)
 	 * xparameters.h.
 	 */
 
-	Status = gather_MPU_data(IIC_DEVICE_ID);
+	// Initialize MPU 6050
+	Status = mpu_init();
 
 	if (Status != XST_SUCCESS) {
-		xil_printf("Gather Data Failed\r\n");
+		xil_printf("MPU Initialization Failed\r\n");
 		return XST_FAILURE;
 	}
 
-	xil_printf("Successfully ran MPU6050 data gathering\r\n");
+
+
+	// Get MPU data
+	mpu_data_t data = get_mpu_data();
+
+	// Display the data
+	printf("Acceleration (g): X: %0.2f, Y: %0.2f, Z: %0.2f\n",
+		   data.accel_x, data.accel_y, data.accel_z);
+	printf("Gyroscope (dps): X: %0.2f, Y: %0.2f, Z: %0.2f\n",
+		   data.gyro_x, data.gyro_y, data.gyro_z);
+
+
+
+//	// DATA GATHERING TEST
+//	Status = mpu_data_read_test();
+//	if (Status != XST_SUCCESS) {
+//		xil_printf("Gather Data Failed\r\n");
+//		return XST_FAILURE;
+//	}
+//	xil_printf("Successfully ran MPU6050 data gathering\r\n");
+
+
+	/* deinitialize the device */
+	Status = mpu_deinit();
+	if (Status != XST_SUCCESS)
+	{
+		xil_printf("MPU De-initialization Failed\r\n");
+		return XST_FAILURE;
+	}
+
+
+
+
 	return XST_SUCCESS;
 
 }
 
-
-/*****************************************************************************/
-/**
-*
-* This function does a selftest on the IIC device and XIic driver as an
-* example.
-*
-* @param	DeviceId is the XPAR_<IIC_instance>_DEVICE_ID value from
-*		xparameters.h.
-*
-* @return	XST_SUCCESS if successful, XST_FAILURE if unsuccessful.
-*
-* @note		None.
-*
-****************************************************************************/
-
-int gather_MPU_data(u16 DeviceId)
-
-{
-
-	float accel_g[3]; /**< Acceleration data in g */
-	float gyro_dps[3]; /**< Gyroscope data in dps */
-	uint8_t res;
-
+// Call MPU 6050 driver initialization
+int mpu_init(){
 	/* initialize the device */
+	uint8_t res;
 	res = mpu6050_basic_init(MPU6050_ADDRESS_AD0_LOW);
 	if (res != 0)
 	{
 		mpu6050_interface_debug_print("mpu6050: init failed.\n");
 		return 1;
 	}
+	return 0;
+}
+
+// Call MPU 6050 driver de-initialization
+int mpu_deinit(){
+	/* deinitialize the device */
+	uint8_t res;
+	res = mpu6050_basic_deinit();
+	if (res != 0)
+	{
+		mpu6050_interface_debug_print("mpu6050: deinit failed.\n");
+		return 1;
+	}
+	return 0;
+}
+
+
+
+// Function to get MPU6050 gyroscope and accelerometer data
+mpu_data_t get_mpu_data() {
+    mpu_data_t data;
+    float accel_g[3]; // Acceleration data in g
+    float gyro_dps[3]; // Gyroscope data in dps
+    uint8_t res;
+
+    // Read data from MPU6050
+    res = mpu6050_basic_read(accel_g, gyro_dps);
+    if (res != 0) {
+        mpu6050_interface_debug_print("mpu6050: read failed.\n");
+        // Return zeroed struct in case of error
+        return (mpu_data_t){0};
+    }
+
+    // Populate the struct with the readings
+    data.accel_x = accel_g[0];
+    data.accel_y = accel_g[1];
+    data.accel_z = accel_g[2];
+    data.gyro_x = gyro_dps[0];
+    data.gyro_y = gyro_dps[1];
+    data.gyro_z = gyro_dps[2];
+
+    return data;
+}
+
+
+
+
+// TEST FUNCTIONS
+
+
+//This function performs a read data test on the MPU 6050, gathering 60 samples of
+//gyro and accel reads at a rate of 1 sample per second
+int mpu_data_read_test()
+
+{
+
+	float accel_g[3]; /**< Acceleration data in g */
+	float gyro_dps[3]; /**< Gyroscope data in dps */
+	uint8_t res;
 
 	mpu6050_interface_debug_print("mpu6050: start reading data.\n");
 
@@ -156,19 +245,16 @@ int gather_MPU_data(u16 DeviceId)
 		mpu6050_interface_debug_print("Gyroscope (dps): X: %0.2f, Y: %0.2f, Z: %0.2f\n",
 									   gyro_dps[0], gyro_dps[1], gyro_dps[2]);
 
-		/* delay 10 milliseconds */
-		mpu6050_interface_delay_ms(1);
+		/* delay 1 milliseconds */
+		mpu6050_interface_delay_ms(1000);
 	}
 
-	/* deinitialize the device */
-	res = mpu6050_basic_deinit();
-	if (res != 0)
-	{
-		mpu6050_interface_debug_print("mpu6050: deinit failed.\n");
-		return 1;
-	}
 
 	mpu6050_interface_debug_print("mpu6050: test completed successfully.\n");
 
 	return XST_SUCCESS;
 }
+
+
+
+
