@@ -38,7 +38,7 @@
 #include "xparameters.h"
 #include "xiic.h"
 #include "xil_printf.h"
-#include "sleep.h"
+#include <unistd.h> // For usleep()
 
 #define IIC_DEVICE_ID	   XPAR_IIC_0_DEVICE_ID
 
@@ -88,12 +88,12 @@ uint8_t mpu6050_interface_iic_init(void)
     }
 
     // Enable repeated start option
-    XIic_SetOptions(&IicInstance, XII_REPEATED_START_OPTION);
+    //XIic_SetOptions(&IicInstance, XII_REPEATED_START_OPTION);
 
-    // Set the 7-bit MPU6050 address (0x68 if AD0=0, or 0x69 if AD0=1)
+    // Set the 7-bit MPU6050 address (0x68 if AD0=0, or 0x69 i f AD0=1)
     XIic_SetAddress(&IicInstance, XII_ADDR_TO_SEND_TYPE, 0x68);
 
-    xil_printf("IIC interface initialized successfully.\n");
+    //xil_printf("IIC interface initialized successfully.\n");
     return 0;  // Success
 }
 
@@ -133,34 +133,38 @@ uint8_t mpu6050_interface_iic_deinit(void)
 uint8_t mpu6050_interface_iic_read(uint8_t addr, uint8_t reg, uint8_t *buf, uint16_t len)
 {
     int status;
-    uint8_t tx_buf = reg;
+
+    uint8_t iic_addr_7bit = addr >> 1;
 
 
-    //xil_printf("IIC Read: Addr=0x%X, Reg=0x%X, Len=%d\n", addr, reg, len);
+    //xil_printf("IIC Read: Addr=0x%X, Reg=0x%X, Len=%d\n", iic_addr_7bit, reg, len);
 
     // Send register address
-    status = XIic_MasterSend(&IicInstance, &tx_buf, 1);
-    if (status != XST_SUCCESS)
-    {
-        xil_printf("IIC Write (Register Address) failed: %d\n", status);
-        return 1;
-    }
+    //status = XIic_MasterSend(&IicInstance, &tx_buf, 1);
+    //XIic_SetAddress(&IicInstance, XII_ADDR_TO_SEND_TYPE, iic_addr_7bit);
+    status = XIic_Send(IicInstance.BaseAddress, iic_addr_7bit, &reg, 1, XIIC_REPEATED_START);
+//    if (status == 0)
+//    {
+//        xil_printf("IIC Write (Register Address) failed: %d\n", status);
+//        return 1;
+//    }
 
     // Receive data
-    status = XIic_MasterRecv(&IicInstance, buf, len);
-    if (status != XST_SUCCESS)
-    {
-        xil_printf("IIC Read (Data) failed: %d\n", status);
-        return 1;
-    }
+    //status = XIic_MasterRecv(&IicInstance, buf, len);
+    status = XIic_Recv(IicInstance.BaseAddress, iic_addr_7bit, buf, len, XIIC_STOP);
+//    if (status == 0)
+//    {
+//        xil_printf("IIC Read (Data) failed: %d\n", status);
+//        return 1;
+//    }
 
     // Print out received data
-	xil_printf("Received Data: ");
-	for (uint16_t i = 0; i < len; i++)
-	{
-	   xil_printf("0x%X ", buf[i]);
-	}
-	xil_printf("\n");
+//	xil_printf("Received Data: ");
+//	for (uint16_t i = 0; i < len; i++)
+//	{
+//	   xil_printf("0x%X ", buf[i]);
+//	}
+//	xil_printf("\n");
 
     return 0; // Success
 }
@@ -179,20 +183,23 @@ uint8_t mpu6050_interface_iic_read(uint8_t addr, uint8_t reg, uint8_t *buf, uint
 uint8_t mpu6050_interface_iic_write(uint8_t addr, uint8_t reg, uint8_t *buf, uint16_t len)
 {
     int status;
+    uint8_t iic_addr_7bit = addr >> 1;
     uint8_t data[len + 1];
 
     // Prepare the data buffer (register address + data)
     data[0] = reg; // First byte is the register address
-    for (uint16_t i = 0; i < len; i++) {
-        data[i + 1] = buf[i]; // Remaining bytes are the data to write
-    }
+//    for (uint16_t i = 0; i < len; i++) {
+//        data[i + 1] = buf[i]; // Remaining bytes are the data to write
+//    }
+    memcpy(&data[1], buf, len);
 
     // Perform the I2C write operation
-    status = XIic_MasterSend(&IicInstance, data, len + 1);
-    if (status != XST_SUCCESS) {
-        xil_printf("IIC write failed with status: %d\n", status);
-        return 1; // Write failed
-    }
+    //status = XIic_MasterSend(&IicInstance, data, len + 1);
+    status = XIic_Send(IicInstance.BaseAddress, iic_addr_7bit, data, len + 1, XIIC_STOP);
+//    if (status == 0) {
+//        xil_printf("IIC write failed with status: %d\n", status);
+//        return 1; // Write failed
+//    }
 
     return 0; // Success
 }
@@ -204,7 +211,7 @@ uint8_t mpu6050_interface_iic_write(uint8_t addr, uint8_t reg, uint8_t *buf, uin
  */
 void mpu6050_interface_delay_ms(uint32_t ms)
 {
-    usleep(ms * 1000); // Convert milliseconds to microseconds
+    usleep(ms * 100); // Convert milliseconds to microseconds
 }
 
 /**

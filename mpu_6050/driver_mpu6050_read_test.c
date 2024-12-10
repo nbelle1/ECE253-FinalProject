@@ -499,6 +499,45 @@ uint8_t mpu6050_read_test(mpu6050_address_t addr, uint32_t times)
         return 1;
     }
     
+    /* ±1000dps */
+	res = mpu6050_set_gyroscope_range(&gs_handle, MPU6050_GYROSCOPE_RANGE_1000DPS);
+	if (res != 0)
+	{
+		mpu6050_interface_debug_print("mpu6050: set gyroscope range failed.\n");
+		(void)mpu6050_deinit(&gs_handle);
+
+		return 1;
+	}
+
+	/* delay 100 ms */
+	mpu6050_interface_delay_ms(100);
+
+	mpu6050_interface_debug_print("mpu6050: set gyroscope range 1000dps.\n");
+	for (i = 0; i < times; i++)
+	{
+		int16_t accel_raw[1][3];
+		float accel_g[1][3];
+		int16_t gyro_raw[1][3];
+		float gyro_dps[1][3];
+		uint16_t len;
+
+		len = 1;
+		res = mpu6050_read(&gs_handle, accel_raw, accel_g, gyro_raw, gyro_dps, &len);
+		if (res != 0)
+		{
+			mpu6050_interface_debug_print("mpu6050: read failed.\n");
+			(void)mpu6050_deinit(&gs_handle);
+
+			return 1;
+		}
+		mpu6050_interface_debug_print("mpu6050: gyro x is %0.2fdps.\n", gyro_dps[0][0]);
+		mpu6050_interface_debug_print("mpu6050: gyro y is %0.2fdps.\n", gyro_dps[0][1]);
+		mpu6050_interface_debug_print("mpu6050: gyro z is %0.2fdps.\n", gyro_dps[0][2]);
+
+		/* delay 1000 ms */
+		mpu6050_interface_delay_ms(1000);
+	}
+
     /* ±2g */
     res = mpu6050_set_accelerometer_range(&gs_handle, MPU6050_ACCELEROMETER_RANGE_2G);
     if (res != 0)
