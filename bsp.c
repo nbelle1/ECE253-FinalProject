@@ -6,7 +6,7 @@
 /**/
 #include "qpn_port.h"
 #include "bsp.h"
-#include "InclineDisplay.h"
+#include "incline_display.h"
 #include "xintc.h"
 #include "xtmrctr.h"
 #include "xil_exception.h"
@@ -216,10 +216,10 @@ void Q_onAssert(char const Q_ROM * const Q_ROM_VAR file, int line) {
     }
 }
 
-/* Interrupt handler functions here.  Do not forget to include them in InclineDisplay.h!
+/* Interrupt handler functions here.  Do not forget to include them in incline_display.h!
 To post an event from an ISR, use this template:
 QActive_postISR((QActive *)&AO_InclineDisplay, SIGNALHERE);
-Where the Signals are defined in InclineDisplay.h  */
+Where the Signals are defined in incline_display.h  */
 
 /******************************************************************************
 *

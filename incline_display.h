@@ -6,17 +6,38 @@
 #ifndef InclineDisplay_h
 #define InclineDisplay_h
 
+#define I2C_READ_MAX = 10
+
 enum InclineDisplaySignals {
-	ENCODER_UP = Q_USER_SIG,
-	ENCODER_DOWN,
-	ENCODER_CLICK,
-	TOP_BUTTON,
-	LEFT_BUTTON,
-	RIGHT_BUTTON,
-	BOTTOM_BUTTON,
-	MIDDLE_BUTTON,
-	TIMER_SLEEP
+	READ_I2C = Q_USER_SIG,
+	TOGGLE_VIEW,
+	TOGGLE_RIDE,
+	RESET_RIDE,
+	GET_INCLINE,
+	UPDATE_INCLINE,
+	UPDATE_RIDE,
+	
 };
+
+enum RideState {
+	RIDE_OFF = 0,
+	RIDE_ON,
+	RIDE_PAUSE,
+};
+
+typedef struct {
+    float min_incline;
+    float max_incline;
+    float average_incline;
+	int insert_array_count;
+	int insert_array_interval;
+} RideInfo;
+
+typedef struct {
+    int i2c_read_counter;
+    float raw_accel_array[I2C_READ_MAX];
+    float raw_gyro_array[I2C_READ_MAX];
+} MpuData;
 
 
 extern struct InclineDisplayTag AO_InclineDisplay;

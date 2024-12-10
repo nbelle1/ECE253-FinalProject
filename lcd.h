@@ -53,6 +53,7 @@
 #include "xspi_l.h"
 #include "xil_printf.h"
 #include <stdlib.h>
+#include "incline_display.h"
 
 #define SPI_DC          XPAR_SPI_DC_BASEADDR
 #define B_RS            0x00000001
@@ -103,7 +104,6 @@ void clrScr(void);
 
 void drawHLine(int x, int y, int l);
 void fillRect(int x1, int y1, int x2, int y2);
-void drawTriangle(int x, int y);
 void printMode(int mode);
 void printVolumeNumber(int volume);
 void displayVolume(int volume);
@@ -111,9 +111,17 @@ void eraseVolume(int volume);
 void increaseVolume(int volume);
 void decreaseVolume(int volume);
 
-void setFont(u8* font);
-void printChar(u8 c, int x, int y);
-void lcdPrint(char *st, int x, int y);
-void lcdTriangleBackground(void);
+
+//Incline Display Functions
+#define ARRAY_PLOT_LENGTH = 256
+void displayHomeBackground();
+void displayHomeIncline(float incline);
+
+void displayRideBackground();
+void displayRideInfo(RideInfo ride_info);
+void displayRideArrayPlot(float ride_array[ARRAY_PLOT_LENGTH]);
+void displayRideCurIncline(float cur_incline);
+
+void displayRideState(enum RideState cur_state);
 
 #endif /* LCD_H_ */

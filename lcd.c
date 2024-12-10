@@ -52,11 +52,6 @@ int fcl;
 int bch;
 int bcl;
 
-// Full volume bar coordinates
-int vx1 = 56;
-int vx2 = 183;
-int vy1 = 80;
-int vy2 = 119;
 
 struct _current_font cfont;
 
@@ -246,34 +241,6 @@ void fillRect(int x1, int y1, int x2, int y2) {
 	clrXY();
 }
 
-void drawTriangle(int x, int y) {
-    int i, j;
-
-    // Define the bounds of the triangle in the 40x40 box
-    int x1 = x;
-    int y1 = y;
-    int x2 = x + 39;  // Box width of 40
-    int y2 = y + 39;  // Box height of 40
-
-    int leftX = x1 + 19;
-    int rightX = x2 - 19;
-    // Loop through each row from top to bottom
-    for (i = y1; i <= y2; i++) {
-        // Calculate the left and right x-bounds of the triangle for this row
-        leftX = x1 + 19 - ((i-y1)/2);          // Left bound slants from (x1, y1) to (x1 + 20, y2)
-        rightX = x2 - 19 + ((i-y1)/2);         // Right bound slants from (x2, y1) to (x1 + 20, y2)
-
-        // Draw the row of the triangle from leftX to rightX
-        setXY(leftX, i, rightX, i);
-        for (j = leftX; j <= rightX; j++) {
-            LCD_Write_DATA(fch);            // Fill color (high byte)
-            LCD_Write_DATA(fcl);            // Fill color (low byte)
-        }
-    }
-
-    clrXY();
-}
-
 
 // Select the font used by print() and printChar()
 void setFont(u8* font) {
@@ -317,138 +284,43 @@ void lcdPrint(char *st, int x, int y) {
 }
 
 
-void lcdTriangleBackground(void){
+// Funcitons for Incline Display 
 
-	//Set background color
-	setColor(69, 208, 223);
-	fillRect(0,0,DISP_X_SIZE,DISP_Y_SIZE);
-
-	setColor(41, 140, 171);
-	for(int i = 0; i < DISP_X_SIZE; i+=40){
-		for(int j = 0; j < DISP_Y_SIZE; j+=40){
-			drawTriangle(i, j);
-		}
-	}
-
-
-	//lcdPrint("Hello !!!!!", 40, 60);
+//Home View
+void displayHomeBackground(){
+	xil_printf("\nTODO: displayHomeBackground");
+	return;
 }
-
-/*
-void lcdTriangleBackground(void){
-	for(int y_pos = 0; y_pos < DISP_Y_SIZE; y_pos+=40){
-		for(int x1 = 0; x1 < DISP_X_SIZE; x1++){
-			int t_pos = abs(((x1+21) % 40) - 19);
-			setColor(69, 208, 223);
-			fillRect(x1, y_pos, x1+1, y_pos+(39-(t_pos*2)));
-			setColor(41, 140, 171);
-			fillRect(x1, y_pos+39-(t_pos*2), x1+1, y_pos+40);
-		}
-	}
-}
-*/
-
-void printMode(int mode){
-	setColor(0,0,0);
-	setColorBg(255, 255, 255);
-	setFont(BigFont);
-	char buffer[20];           // Create a buffer to hold the formatted string
-	if(mode == -1){
-		sprintf(buffer, "Mode:"); // Format the string with the mode number
-
-	}
-	else{
-		sprintf(buffer, "Mode: %d", mode); // Format the string with the mode number
-
-	}
-	lcdPrint(buffer, 65, 160); // Print the formatted string
-}
-
-void printVolumeNumber(int volume){
-	setColor(0,0,0);
-	setColorBg(255, 255, 255);
-	setFont(BigFont);
-	char buffer[40];           // Create a buffer to hold the formatted string
-	//sprintf(buffer, "Volume: %d", volume); // Format the string with the mode number
-	lcdPrint(buffer, 40, 100); // Print the formatted string
-}
-
-void displayVolume(int volume){
-	int vol = 0;
-	while (vol < volume){
-		increaseVolume(vol);
-		vol++;
-	}
-}
-
-void eraseVolume(int volume){
-	int vol = volume;
-	while (vol >= 0){
-		decreaseVolume(vol);
-		vol --;
-	}
-}
-
-void increaseVolume(int volume){
-	setColor(255, 255, 255);
-	int new_vx1 = vx1 + (volume * 2);
-	int new_vx2 = vx1 + (volume * 2) + 2;
-	fillRect(new_vx1, vy1, new_vx2, vy2);
-}
-
-//void decreaseVolume(int volume){
-//	if(volume == 0 ){
-//		return;
-//	}
-//	int start_x = volume * 2 + vx1 - 1;
-//	for(int x1 = start_x; x1 >= start_x - 1; x1--){
-//		int t_pos = abs(((x1+21) % 40) - 19);
-//		setColor(69, 208, 223);
-//		fillRect(x1, vy1, x1+1, vy1+(39-(t_pos*2)));
-//		setColor(41, 140, 171);
-//		fillRect(x1, vy1+39-(t_pos*2), x1+1, vy2);
-//	}
-//}
-
-void decreaseVolume(int volume){
-	int start_x = volume * 2 + vx1;
-	for(int x1 = start_x; x1 >= start_x - 1; x1--){
-		int t_pos = ((x1+20) % 40) - 20;
-		// make sure a negative t_pos gets fixed to 1-20 scale
-		if(t_pos < 0){
-			t_pos = abs(t_pos) - 1;
-		}
-		// make t_pos 1-20
-		t_pos++;
-
-		setColor(69, 208, 223);
-		fillRect(x1, vy1, x1, vy1+(40-(t_pos*2)));
-		setColor(41, 140, 171);
-		fillRect(x1, vy1+40-(t_pos*2), x1, vy2);
-	}
-
-	if(volume == 1){
-		decreaseVolume(0);
-	}
-}
-
-void eraseMode(){
-	//int t_vx1 = vx1;
-	int t_vy1 = vy1;
-	//int t_vx2 = vx2;
-	int t_vy2 = vy2;
-
-	vy1 += 80;
-	vy2 += 80;
-
-	eraseVolume(128);
-
-
-	vy1 = t_vy1;
-	vy2 = t_vy2;
+void displayHomeIncline(float incline){
+	xil_printf("\nTODO: displayHomeIncline");
+	return;
 }
 
 
+//Ride View
+void displayRideBackground(){
+	xil_printf("\nTODO: displayRideBackground");
+	return;
+}
 
+void displayRideInfo(RideInfo ride_info){
+	xil_printf("\nTODO: displayRideStatistcs");
+	return;
+}
 
+void displayRideArrayPlot(float ride_array[ARRAY_PLOT_LENGTH]){
+	xil_printf("\nTODO: displayRideArrayPlot");
+	return;
+}
+
+void displayRideCurIncline(float cur_incline){
+	xil_printf("\nTODO: displayRideCurIncline");
+	return;
+}
+
+//Shared
+void displayRideState(enum RideState cur_state){
+	xil_printf("\nTODO: displayRideCurStatus");
+	return;
+}
 

@@ -1,38 +1,4 @@
-/******************************************************************************
-* Copyright (C) 2002 - 2021 Xilinx, Inc.  All rights reserved.
-* Copyright (c) 2022 - 2023 Advanced Micro Devices, Inc. All Rights Reserved.
-* SPDX-License-Identifier: MIT
-******************************************************************************/
 
-/******************************************************************************/
-/**
-* @file xiic_selftest_example.c
-*
-* This file contains a example for using the IIC hardware device and
-* XIic driver.
-*
-* @note
-*
-* None
-*
-* <pre>
-* MODIFICATION HISTORY:
-*
-* Ver   Who  Date	 Changes
-* ----- ---- -------- -----------------------------------------------
-* 1.00a sv   05/09/05 Initial release for TestApp integration.
-* 2.00a sdm  09/22/09 Updated to use the HAL APIs, replaced call to
-*		      XIic_Initialize API with XIic_LookupConfig and
-*		      XIic_CfgInitialize. Minor changes made as per
-*		      coding guidelines.
-* 3.4   ms   01/23/17 Added xil_printf statement in main function to
-*                     ensure that "Successfully ran" and "Failed" strings
-*                     are available in all examples. This is a fix for
-*                     CR-965028.
-* 3.10  gm   07/09/23 Added SDT support.
-* </pre>
-*
-*******************************************************************************/
 
 #include "xparameters.h"
 #include "xiic.h"
@@ -40,15 +6,12 @@
 #include "mpu_6050/driver_mpu6050_read_test.h"
 #include "mpu_6050/driver_mpu6050.h"
 #include "mpu_6050/driver_mpu6050_basic.h"
+#include "incline_display.h"
+
 
 
 /************************** Constant Definitions ******************************/
 
-/*
- * The following constants map to the XPAR parameters created in the
- * xparameters.h file. They are defined here such that a user can easily
- * change all the needed parameters in one place.
- */
 
 #define IIC_DEVICE_ID	   XPAR_IIC_0_DEVICE_ID
 
@@ -65,45 +28,31 @@ int gather_MPU_data(u16 DeviceId);
 
 /************************** Variable Definitions ******************************/
 
-/*
- * The following are declared globally so they are zeroed and so they are
- * easily accessible from a debugger.
- */
+
 XIic Iic; /* The driver instance for IIC Device */
 
 
-/******************************************************************************/
-/**
-* Main function to call the example. This function is not included if the
-* example is generated from the TestAppGen test tool.
-*
-*
-* @return	XST_SUCCESS if successful, XST_FAILURE if unsuccessful.
-*
-* @note		None.
-*
-******************************************************************************/
 
-int main(void)
-{
-	int Status;
+// int main(void)
+// {
+// 	int Status;
 
-	/*
-	 * Run the example, specify the device ID that is generated in
-	 * xparameters.h.
-	 */
+// 	/*
+// 	 * Run the example, specify the device ID that is generated in
+// 	 * xparameters.h.
+// 	 */
 
-	Status = gather_MPU_data(IIC_DEVICE_ID);
+// 	Status = gather_MPU_data(IIC_DEVICE_ID);
 
-	if (Status != XST_SUCCESS) {
-		xil_printf("Gather Data Failed\r\n");
-		return XST_FAILURE;
-	}
+// 	if (Status != XST_SUCCESS) {
+// 		xil_printf("Gather Data Failed\r\n");
+// 		return XST_FAILURE;
+// 	}
 
-	xil_printf("Successfully ran MPU6050 data gathering\r\n");
-	return XST_SUCCESS;
+// 	xil_printf("Successfully ran MPU6050 data gathering\r\n");
+// 	return XST_SUCCESS;
 
-}
+// }
 
 
 /*****************************************************************************/
@@ -121,7 +70,7 @@ int main(void)
 *
 ****************************************************************************/
 
-int gather_MPU_data(u16 DeviceId)
+int getMpuData_Test(u16 DeviceId)
 
 {
 
@@ -171,4 +120,32 @@ int gather_MPU_data(u16 DeviceId)
 	mpu6050_interface_debug_print("mpu6050: test completed successfully.\n");
 
 	return XST_SUCCESS;
+}
+
+void getMpuData(MpuData *mpu_data){
+	index = mpu_data->i2c_read_counter;
+	if (index >= 0 && index < I2C_READ_MAX) {
+        float accel = getMpuAccel(); // Replace with your actual function
+        float gyro = getMpuGyro();  // Replace with your actual function
+
+        mpu_data->raw_accel_array[index] = accel;
+        mpu_data->raw_gyro_array[index] = gyro;
+		
+    } else {
+        xil_printf("Setting Raw Mpu Data Index out of bounds.\n");
+    }
+}
+
+float getMpuAccel(){
+	xil_printf("\nTODO: getMpuAccel");
+	return 0.0;
+
+}
+float getMpuGyro(){
+	xil_printf("\nTODO: getMpuGyro");
+	return 0.0;
+}
+float computeIncline(MpuData mpu_data){
+	xil_printf("\nTODO: computeIncline");
+	return 0.0;
 }
