@@ -238,7 +238,7 @@ void timer_handler() {
 	ControlStatusReg = XTimerCtr_ReadReg(sys_tmrctr.BaseAddress, 0, XTC_TCSR_OFFSET);
 
 
-	//TODO: Create New Timer Interrupts
+	QActive_postISR((QActive *)&AO_InclineDisplay, READ_I2C);
 
 	/*
 	 * Acknowledge the interrupt by clearing the interrupt
@@ -272,104 +272,104 @@ enum STATE {
 void encoder_handler(void *CallbackRef){
 	//xil_printf("Encoder Trigger\n");
 	XGpio *GpioPtr = (XGpio *)CallbackRef;
-	int cur_pin = XGpio_DiscreteRead(&EncoderGpio, 1);
-	sleep_count = 0;
-
-	if(cur_pin == BUTTON_DOWN){
-		//Send Encoder Down Signal
-		//xil_printf("Encoder Click Signal\n");
-    	QActive_postISR((QActive *)&AO_InclineDisplay, ENCODER_CLICK);
-
-		//Time Based De-bouncing
-		usleep(200000);
-		//reset_pin();
-		//continue;
-	}
-	else{
-		switch(current_encoder_state){
-			case S0_START:
-				switch (cur_pin) {
-					case P1HIGH_P2LOW:
-						current_encoder_state = S2_CW_1;
-						break;
-					case P1LOW_P2HIGH:
-						current_encoder_state = S1_CCW_1;
-						break;
-				}
-				break;
-			case S1_CCW_1:
-				switch (cur_pin) {
-					case P1HIGH_P2HIGH:
-						current_encoder_state = S0_START;
-						break;
-					case P1LOW_P2LOW:
-						current_encoder_state = S3_CCW_2;
-						break;
-				}
-				break;
-			case S2_CW_1:
-				switch (cur_pin) {
-					case P1HIGH_P2HIGH:
-						current_encoder_state = S0_START;
-						break;
-					case P1LOW_P2LOW:
-						current_encoder_state = S4_CW_2;
-						break;
-				}
-				break;
-			case S3_CCW_2:
-				switch (cur_pin) {
-					case P1LOW_P2HIGH:
-						current_encoder_state = S1_CCW_1;
-						break;
-					case P1HIGH_P2LOW:
-						current_encoder_state = S5_CCW_3;
-						break;
-				}
-				break;
-			case S4_CW_2:
-				switch (cur_pin) {
-					case P1HIGH_P2LOW:
-						current_encoder_state = S2_CW_1;
-						break;
-					case P1LOW_P2HIGH:
-						current_encoder_state = S6_CW_3;
-						break;
-				}
-				break;
-			case S5_CCW_3:
-				switch (cur_pin) {
-					case P1LOW_P2LOW:
-						current_encoder_state = S3_CCW_2;
-						break;
-					case P1HIGH_P2HIGH:
-						//Update LED CCW
-						//xil_printf("Encoder Down Signal\n");
-						QActive_postISR((QActive *)&AO_InclineDisplay, ENCODER_DOWN);
-
-						//current_position = led_left(current_position);
-						current_encoder_state = S0_START;
-						break;
-				}
-				break;
-			case S6_CW_3:
-				switch (cur_pin) {
-					case P1LOW_P2LOW:
-						current_encoder_state = S4_CW_2;
-						break;
-					case P1HIGH_P2HIGH:
-						//Update LED CW
-						//xil_printf("Encoder Right Signal\n");
-						QActive_postISR((QActive *)&AO_InclineDisplay, ENCODER_UP);
-
-						current_encoder_state = S0_START;
-						//current_position = led_right(current_position);
-						break;
-				}
-				break;
-		}
-	}
-
+//	int cur_pin = XGpio_DiscreteRead(&EncoderGpio, 1);
+//	sleep_count = 0;
+//
+//	if(cur_pin == BUTTON_DOWN){
+//		//Send Encoder Down Signal
+//		//xil_printf("Encoder Click Signal\n");
+//    	QActive_postISR((QActive *)&AO_InclineDisplay, ENCODER_CLICK);
+//
+//		//Time Based De-bouncing
+//		usleep(200000);
+//		//reset_pin();
+//		//continue;
+//	}
+//	else{
+//		switch(current_encoder_state){
+//			case S0_START:
+//				switch (cur_pin) {
+//					case P1HIGH_P2LOW:
+//						current_encoder_state = S2_CW_1;
+//						break;
+//					case P1LOW_P2HIGH:
+//						current_encoder_state = S1_CCW_1;
+//						break;
+//				}
+//				break;
+//			case S1_CCW_1:
+//				switch (cur_pin) {
+//					case P1HIGH_P2HIGH:
+//						current_encoder_state = S0_START;
+//						break;
+//					case P1LOW_P2LOW:
+//						current_encoder_state = S3_CCW_2;
+//						break;
+//				}
+//				break;
+//			case S2_CW_1:
+//				switch (cur_pin) {
+//					case P1HIGH_P2HIGH:
+//						current_encoder_state = S0_START;
+//						break;
+//					case P1LOW_P2LOW:
+//						current_encoder_state = S4_CW_2;
+//						break;
+//				}
+//				break;
+//			case S3_CCW_2:
+//				switch (cur_pin) {
+//					case P1LOW_P2HIGH:
+//						current_encoder_state = S1_CCW_1;
+//						break;
+//					case P1HIGH_P2LOW:
+//						current_encoder_state = S5_CCW_3;
+//						break;
+//				}
+//				break;
+//			case S4_CW_2:
+//				switch (cur_pin) {
+//					case P1HIGH_P2LOW:
+//						current_encoder_state = S2_CW_1;
+//						break;
+//					case P1LOW_P2HIGH:
+//						current_encoder_state = S6_CW_3;
+//						break;
+//				}
+//				break;
+//			case S5_CCW_3:
+//				switch (cur_pin) {
+//					case P1LOW_P2LOW:
+//						current_encoder_state = S3_CCW_2;
+//						break;
+//					case P1HIGH_P2HIGH:
+//						//Update LED CCW
+//						//xil_printf("Encoder Down Signal\n");
+//						QActive_postISR((QActive *)&AO_InclineDisplay, ENCODER_DOWN);
+//
+//						//current_position = led_left(current_position);
+//						current_encoder_state = S0_START;
+//						break;
+//				}
+//				break;
+//			case S6_CW_3:
+//				switch (cur_pin) {
+//					case P1LOW_P2LOW:
+//						current_encoder_state = S4_CW_2;
+//						break;
+//					case P1HIGH_P2HIGH:
+//						//Update LED CW
+//						//xil_printf("Encoder Right Signal\n");
+//						QActive_postISR((QActive *)&AO_InclineDisplay, ENCODER_UP);
+//
+//						current_encoder_state = S0_START;
+//						//current_position = led_right(current_position);
+//						break;
+//				}
+//				break;
+//		}
+//	}
+//
 
 	XGpio_InterruptClear(GpioPtr, 1);
 }
@@ -385,30 +385,30 @@ void button_handler(void *CallbackRef){
 	//xil_printf("Button interrupt\n");
 	sleep_count = 0;
 
-	//Handle Count Up
+	//Handle Top Button
 	if(btn == 1){
-		QActive_postISR((QActive *)&AO_InclineDisplay, TOP_BUTTON);
+		QActive_postISR((QActive *)&AO_InclineDisplay, TOGGLE_VIEW);
 	}
 
-	// Handle Timer Start
+	// Handle Left Button
 	else if(btn == 2){
-		QActive_postISR((QActive *)&AO_InclineDisplay, LEFT_BUTTON);
+		QActive_postISR((QActive *)&AO_InclineDisplay, TOGGLE_RIDE);
 	}
 
-	//Handle Timer Stop
+	//Handle Right Button
 	else if(btn == 4){
-		QActive_postISR((QActive *)&AO_InclineDisplay, RIGHT_BUTTON);
+		QActive_postISR((QActive *)&AO_InclineDisplay, RESET_RIDE);
 	}
 
-	// Handle Count Down
-	else if(btn == 8){
-		QActive_postISR((QActive *)&AO_InclineDisplay, BOTTOM_BUTTON);
-	}
+//	// Handle Count Down
+//	else if(btn == 8){
+//		QActive_postISR((QActive *)&AO_InclineDisplay, RESET_INCLINE);
+//	}
 
 	// Handle Reset
-	else if(btn == 16){
-		QActive_postISR((QActive *)&AO_InclineDisplay, MIDDLE_BUTTON);
-	}
+//	else if(btn == 16){
+//		QActive_postISR((QActive *)&AO_InclineDisplay, MIDDLE_BUTTON);
+//	}
 
 
 	XGpio_InterruptClear(GpioPtr, 1);

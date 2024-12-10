@@ -113,15 +113,16 @@ void decreaseVolume(int volume);
 
 
 //Incline Display Functions
-#define ARRAY_PLOT_LENGTH = 256
+#define ARRAY_PLOT_LENGTH 256
+
 void displayHomeBackground();
 void displayHomeIncline(float incline);
 
 void displayRideBackground();
 void displayRideInfo(RideInfo ride_info);
-void displayRideArrayPlot(float ride_array[ARRAY_PLOT_LENGTH]);
-void displayRideCurIncline(float cur_incline);
+void displayRideArrayPlot(float ride_array[ARRAY_PLOT_LENGTH], RideInfo ride_info);
+void displayRideCurIncline(float incline);
 
-void displayRideState(enum RideState cur_state);
+void displayRideState(char *st);
 
 #endif /* LCD_H_ */

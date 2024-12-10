@@ -5,8 +5,8 @@
 #ifndef bsp_h
 #define bsp_h
 
-#define RESET_VALUE 100000
-
+//#define RESET_VALUE 100000
+#define RESET_VALUE 10000000 	//Configure for Interrupt Time
 
 /* bsp functions ..........................................................*/
 

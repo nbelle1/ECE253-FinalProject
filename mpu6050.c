@@ -40,6 +40,7 @@
 #include "mpu_6050/driver_mpu6050_read_test.h"
 #include "mpu_6050/driver_mpu6050.h"
 #include "mpu_6050/driver_mpu6050_basic.h"
+#include "mpu6050.h"
 
 
 /************************** Constant Definitions ******************************/
@@ -54,16 +55,6 @@
 
 
 /**************************** Type Definitions ********************************/
-
-// Data structure for MPU6050 readings
-typedef struct {
-    float accel_x;
-    float accel_y;
-    float accel_z;
-    float gyro_x;
-    float gyro_y;
-    float gyro_z;
-} mpu_data_t;
 
 
 /***************** Macros (Inline Functions) Definitions **********************/
@@ -102,59 +93,59 @@ XIic Iic; /* The driver instance for IIC Device */
 *
 ******************************************************************************/
 
-int main(void)
-{
-	int Status;
-
-	/*
-	 * Run the example, specify the device ID that is generated in
-	 * xparameters.h.
-	 */
-
-	// Initialize MPU 6050
-	Status = mpu_init();
-
-	if (Status != XST_SUCCESS) {
-		xil_printf("MPU Initialization Failed\r\n");
-		return XST_FAILURE;
-	}
-
-
-
-	// Get MPU data
-	mpu_data_t data = get_mpu_data();
-
-	// Display the data
-	printf("Acceleration (g): X: %0.2f, Y: %0.2f, Z: %0.2f\n",
-		   data.accel_x, data.accel_y, data.accel_z);
-	printf("Gyroscope (dps): X: %0.2f, Y: %0.2f, Z: %0.2f\n",
-		   data.gyro_x, data.gyro_y, data.gyro_z);
-
-
-
-//	// DATA GATHERING TEST
-//	Status = mpu_data_read_test();
+//int main(void)
+//{
+//	int Status;
+//
+//	/*
+//	 * Run the example, specify the device ID that is generated in
+//	 * xparameters.h.
+//	 */
+//
+//	// Initialize MPU 6050
+//	Status = mpu_init();
+//
 //	if (Status != XST_SUCCESS) {
-//		xil_printf("Gather Data Failed\r\n");
+//		xil_printf("MPU Initialization Failed\r\n");
 //		return XST_FAILURE;
 //	}
-//	xil_printf("Successfully ran MPU6050 data gathering\r\n");
-
-
-	/* deinitialize the device */
-	Status = mpu_deinit();
-	if (Status != XST_SUCCESS)
-	{
-		xil_printf("MPU De-initialization Failed\r\n");
-		return XST_FAILURE;
-	}
-
-
-
-
-	return XST_SUCCESS;
-
-}
+//
+//
+//
+//	// Get MPU data
+//	mpu_data_t data = get_mpu_data();
+//
+//	// Display the data
+//	printf("Acceleration (g): X: %0.2f, Y: %0.2f, Z: %0.2f\n",
+//		   data.accel_x, data.accel_y, data.accel_z);
+//	printf("Gyroscope (dps): X: %0.2f, Y: %0.2f, Z: %0.2f\n",
+//		   data.gyro_x, data.gyro_y, data.gyro_z);
+//
+//
+//
+////	// DATA GATHERING TEST
+////	Status = mpu_data_read_test();
+////	if (Status != XST_SUCCESS) {
+////		xil_printf("Gather Data Failed\r\n");
+////		return XST_FAILURE;
+////	}
+////	xil_printf("Successfully ran MPU6050 data gathering\r\n");
+//
+//
+//	/* deinitialize the device */
+//	Status = mpu_deinit();
+//	if (Status != XST_SUCCESS)
+//	{
+//		xil_printf("MPU De-initialization Failed\r\n");
+//		return XST_FAILURE;
+//	}
+//
+//
+//
+//
+//	return XST_SUCCESS;
+//
+//}
 
 // Call MPU 6050 driver initialization
 int mpu_init(){
@@ -253,6 +244,11 @@ int mpu_data_read_test()
 	mpu6050_interface_debug_print("mpu6050: test completed successfully.\n");
 
 	return XST_SUCCESS;
+}
+
+float computeIncline(mpu_data_t mpu_data, float dt){
+	xil_printf("Compute Incline TODO\r\n");
+	return mpu_data.accel_x;
 }
 
 
