@@ -58,6 +58,7 @@ extern "C"{
  * @note      none
  */
 uint8_t mpu6050_read_test(mpu6050_address_t addr, uint32_t times);
+uint8_t mpu6050_display_test(mpu6050_address_t addr, uint32_t times);
 
 /**
  * @}

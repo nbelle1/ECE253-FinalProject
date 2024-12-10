@@ -3779,9 +3779,11 @@ uint8_t mpu6050_init(mpu6050_handle_t *handle)
 
         return 5;                                                                   /* return error */
     }
+
     if (prev != 0x68)                                                               /* check the id */
     {
         handle->debug_print("mpu6050: id is invalid.\n");                           /* id is invalid */
+        xil_printf("ID: %x\n", prev);                           /* id is invalid */
         (void)handle->iic_deinit();                                                 /* iic deinit */
 
         return 5;                                                                   /* return error */

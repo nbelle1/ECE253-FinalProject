@@ -37,6 +37,10 @@
 #include "xparameters.h"
 #include "xiic.h"
 #include "xil_printf.h"
+#include "mpu_6050/driver_mpu6050_read_test.h"
+#include "mpu_6050/driver_mpu6050.h"
+#include "mpu_6050/driver_mpu6050_basic.h"
+
 
 /************************** Constant Definitions ******************************/
 
@@ -45,13 +49,9 @@
  * xparameters.h file. They are defined here such that a user can easily
  * change all the needed parameters in one place.
  */
-#ifndef TESTAPP_GEN
-#ifndef SDT
+
 #define IIC_DEVICE_ID	   XPAR_IIC_0_DEVICE_ID
-#else
-#define	XIIC_BASEADDRESS	XPAR_XIIC_0_BASEADDR
-#endif
-#endif
+
 
 /**************************** Type Definitions ********************************/
 
@@ -60,11 +60,9 @@
 
 
 /************************** Function Prototypes *******************************/
-#ifndef SDT
-int IicSelfTestExample(u16 DeviceId);
-#else
-int IicSelfTestExample(UINTPTR BaseAddress);
-#endif
+
+int gather_MPU_data(u16 DeviceId);
+
 /************************** Variable Definitions ******************************/
 
 /*
@@ -85,7 +83,7 @@ XIic Iic; /* The driver instance for IIC Device */
 * @note		None.
 *
 ******************************************************************************/
-#ifndef TESTAPP_GEN
+
 int main(void)
 {
 	int Status;
@@ -94,21 +92,19 @@ int main(void)
 	 * Run the example, specify the device ID that is generated in
 	 * xparameters.h.
 	 */
-#ifndef SDT
-	Status = IicSelfTestExample(IIC_DEVICE_ID);
-#else
-	Status = IicSelfTestExample(XIIC_BASEADDRESS);
-#endif
+
+	Status = gather_MPU_data(IIC_DEVICE_ID);
+
 	if (Status != XST_SUCCESS) {
-		xil_printf("IIC selftest Example Failed\r\n");
+		xil_printf("Gather Data Failed\r\n");
 		return XST_FAILURE;
 	}
 
-	xil_printf("Successfully ran IIC selftest Example\r\n");
+	xil_printf("Successfully ran MPU6050 data gathering\r\n");
 	return XST_SUCCESS;
 
 }
-#endif
+
 
 /*****************************************************************************/
 /**
@@ -124,41 +120,55 @@ int main(void)
 * @note		None.
 *
 ****************************************************************************/
-#ifndef SDT
-int IicSelfTestExample(u16 DeviceId)
-#else
-int IicSelfTestExample(UINTPTR BaseAddress)
-#endif
+
+int gather_MPU_data(u16 DeviceId)
+
 {
-	int Status;
-	XIic_Config *ConfigPtr;	/* Pointer to configuration data */
 
-	/*
-	 * Initialize the IIC driver so that it is ready to use.
-	 */
-#ifndef SDT
-	ConfigPtr = XIic_LookupConfig(DeviceId);
-#else
-	ConfigPtr = XIic_LookupConfig(BaseAddress);
-#endif
-	if (ConfigPtr == NULL) {
-		return XST_FAILURE;
+	float accel_g[3]; /**< Acceleration data in g */
+	float gyro_dps[3]; /**< Gyroscope data in dps */
+	uint8_t res;
+
+	/* initialize the device */
+	res = mpu6050_basic_init(MPU6050_ADDRESS_AD0_LOW);
+	if (res != 0)
+	{
+		mpu6050_interface_debug_print("mpu6050: init failed.\n");
+		return 1;
 	}
 
-	Status = XIic_CfgInitialize(&Iic, ConfigPtr, ConfigPtr->BaseAddress);
-	if (Status != XST_SUCCESS) {
-		return XST_FAILURE;
+	mpu6050_interface_debug_print("mpu6050: start reading data.\n");
+
+	for (int i = 0; i < 60; i++) /* Read data for 1 minute */
+	{
+		/* read data */
+		res = mpu6050_basic_read(accel_g, gyro_dps);
+		if (res != 0)
+		{
+			mpu6050_interface_debug_print("mpu6050: read failed.\n");
+			(void)mpu6050_basic_deinit();
+			return 1;
+		}
+
+		/* display the data */
+		mpu6050_interface_debug_print("Acceleration (g): X: %0.2f, Y: %0.2f, Z: %0.2f\n",
+									   accel_g[0], accel_g[1], accel_g[2]);
+		mpu6050_interface_debug_print("Gyroscope (dps): X: %0.2f, Y: %0.2f, Z: %0.2f\n",
+									   gyro_dps[0], gyro_dps[1], gyro_dps[2]);
+
+		/* delay 10 milliseconds */
+		mpu6050_interface_delay_ms(1);
 	}
 
-
-	/*
-	 * Perform a self-test to ensure that the hardware was built
-	 * correctly.
-	 */
-	Status = XIic_SelfTest(&Iic);
-	if (Status != XST_SUCCESS) {
-		return XST_FAILURE;
+	/* deinitialize the device */
+	res = mpu6050_basic_deinit();
+	if (res != 0)
+	{
+		mpu6050_interface_debug_print("mpu6050: deinit failed.\n");
+		return 1;
 	}
+
+	mpu6050_interface_debug_print("mpu6050: test completed successfully.\n");
 
 	return XST_SUCCESS;
 }
