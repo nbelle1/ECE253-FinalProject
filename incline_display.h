@@ -6,7 +6,10 @@
 #ifndef InclineDisplay_h
 #define InclineDisplay_h
 
-#define I2C_READ_MAX = 10
+#include "qepn.h"
+#include "mpu6050.h"
+
+#define I2C_READ_MAX 10
 
 enum InclineDisplaySignals {
 	READ_I2C = Q_USER_SIG,
@@ -33,11 +36,11 @@ typedef struct {
 	int insert_array_interval;
 } RideInfo;
 
+
 typedef struct {
     int i2c_read_counter;
-    float raw_accel_array[I2C_READ_MAX];
-    float raw_gyro_array[I2C_READ_MAX];
-} MpuData;
+    mpu_data_t data_array[I2C_READ_MAX];
+} MpuRawDataStruct;
 
 
 extern struct InclineDisplayTag AO_InclineDisplay;

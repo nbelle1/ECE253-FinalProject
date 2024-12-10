@@ -288,39 +288,123 @@ void lcdPrint(char *st, int x, int y) {
 
 //Home View
 void displayHomeBackground(){
-	xil_printf("\nTODO: displayHomeBackground");
+	//Set background color
+	setColor(69, 208, 223);
+	setColorBg(69, 208, 223);
+	fillRect(0,0,DISP_X_SIZE,DISP_Y_SIZE);
+
+	//Print Font
+	setColor(0,0,0);
+	setFont(SmallFont);
+	lcdPrint("Home View",150,10);
+
 	return;
 }
 void displayHomeIncline(float incline){
-	xil_printf("\nTODO: displayHomeIncline");
+	char st[16]; // Buffer to hold the converted string
+	sprintf(st, "%.2f", incline); // Convert float to string with 2 decimal places
+
+
+	//Print Font
+	setColor(0,0,0);
+	setFont(BigFont);
+	lcdPrint(st,75,50);
+
+	//Print Current Incline
+	setColor(0,0,0);
+	fillRect(50,200,DISP_X_SIZE-50,200 + (incline * 10));
+
+	//Print Chart With Current Incline As Well
 	return;
 }
+
+
+
 
 
 //Ride View
 void displayRideBackground(){
-	xil_printf("\nTODO: displayRideBackground");
+	//Set whole background
+	setColor(208, 69, 223);
+	setColorBg(208, 69, 233);
+	fillRect(0,0,DISP_X_SIZE,DISP_Y_SIZE);
+
+
+	//Print Font
+	setColor(0,0,0);
+	setFont(SmallFont);
+	lcdPrint("Ride View",150,10);
+
 	return;
 }
 
-void displayRideInfo(RideInfo ride_info){
-	xil_printf("\nTODO: displayRideStatistcs");
+void displayRideInfo(RideInfo ride_info) {
+    setFont(SmallFont);
+    char buffer[32]; // Temporary buffer for converting values to strings
+
+    // Print minimum incline
+    sprintf(buffer, "Min Incline: %s%.3f", (ride_info.min_incline >= 0 ? " " : ""), ride_info.min_incline);
+    lcdPrint(buffer, 10, 90); // Display at position (10, 90)
+    xil_printf("\n%s", buffer);
+
+    // Print maximum incline
+    sprintf(buffer, "Max Incline: %s%.3f", (ride_info.max_incline >= 0 ? " " : ""), ride_info.max_incline);
+    lcdPrint(buffer, 10, 110); // Display below the previous line
+    xil_printf("\n%s", buffer);
+
+    // Print average incline
+    sprintf(buffer, "Avg Incline: %s%.3f", (ride_info.average_incline >= 0 ? " " : ""), ride_info.average_incline);
+    lcdPrint(buffer, 10, 130); // Display below the previous line
+    xil_printf("\n%s", buffer);
+
+    // Print insert array count
+    sprintf(buffer, "Array Count: %d", ride_info.insert_array_count);
+    lcdPrint(buffer, 10, 150); // Display below the previous line
+    xil_printf("\n%s", buffer);
+
+    // Print insert array interval
+    sprintf(buffer, "Array Interval: %d", ride_info.insert_array_interval);
+    lcdPrint(buffer, 10, 170); // Display below the previous line
+    xil_printf("\n%s", buffer);
+
+    return;
+}
+
+
+
+void displayRideArrayPlot(float ride_array[ARRAY_PLOT_LENGTH], RideInfo ride_info){
+
+	//Make a box that represetnts the ride_info.averge_incline in bounds 20,200,DISP_X_SIZE-20,DISP_Y_SIZE-20
+	setColor(0,0,0);
+	fillRect(20,200,DISP_X_SIZE-20,DISP_Y_SIZE-20);
 	return;
 }
 
-void displayRideArrayPlot(float ride_array[ARRAY_PLOT_LENGTH]){
-	xil_printf("\nTODO: displayRideArrayPlot");
-	return;
-}
+void displayRideCurIncline(float incline){
 
-void displayRideCurIncline(float cur_incline){
-	xil_printf("\nTODO: displayRideCurIncline");
+	// Convert float to string
+	char st[16]; // Buffer to hold the converted string
+	sprintf(st, "%.2f", incline); // Convert float to string with 2 decimal places
+
+
+	//Print Font
+	setColor(0,0,0);
+	setFont(BigFont);
+	lcdPrint(st,75,50);
+
 	return;
 }
 
 //Shared
-void displayRideState(enum RideState cur_state){
-	xil_printf("\nTODO: displayRideCurStatus");
+void displayRideState(char *st){
+	//Print Background
+	fillRect(10,10,58,22);
+
+	//Print Font
+	setColor(0,0,0);
+	setFont(SmallFont);
+	lcdPrint(st,10,10);
 	return;
 }
+
 
