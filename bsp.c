@@ -238,7 +238,7 @@ void timer_handler() {
 	ControlStatusReg = XTimerCtr_ReadReg(sys_tmrctr.BaseAddress, 0, XTC_TCSR_OFFSET);
 
 
-	QActive_postISR((QActive *)&AO_InclineDisplay, READ_I2C);
+	QActive_postISR((QActive *)&AO_InclineDisplay, GET_INCLINE);
 
 	/*
 	 * Acknowledge the interrupt by clearing the interrupt

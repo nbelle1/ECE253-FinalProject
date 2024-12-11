@@ -9,11 +9,10 @@
 #include "qepn.h"
 #include "mpu6050.h"
 
-#define I2C_READ_MAX 10
+#define NUM_INCLINE_AVG 10
 
 enum InclineDisplaySignals {
-	READ_I2C = Q_USER_SIG,
-	TOGGLE_VIEW,
+	TOGGLE_VIEW = Q_USER_SIG,
 	TOGGLE_RIDE,
 	RESET_RIDE,
 	GET_INCLINE,
@@ -39,7 +38,7 @@ typedef struct {
 
 typedef struct {
     int i2c_read_counter;
-    mpu_data_t data_array[I2C_READ_MAX];
+    mpu_data_t data_array[NUM_INCLINE_AVG];
 } MpuRawDataStruct;
 
 

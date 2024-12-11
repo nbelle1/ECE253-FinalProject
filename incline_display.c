@@ -13,11 +13,13 @@
 
 enum RideState ride_state;
 volatile RideInfo ride_info;
-volatile MpuRawDataStruct mpu_raw_data_struct;
 
 volatile float cur_incline;
-volatile float ride_array[ARRAY_PLOT_LENGTH];
-volatile float display_ride_array[ARRAY_PLOT_LENGTH];
+int raw_incline_index;
+float raw_incline_array[NUM_INCLINE_AVG];
+
+float incline_queue[];
+float ride_array[];
 
 mpu_data_t mpu_data_raw;
 
@@ -54,6 +56,7 @@ void InclineDisplay_ctor(void)  {
 	//Initialize Variables
 	ride_state = RIDE_OFF;
 	cur_incline = 0.0;
+	cur_incline_index = 0;
 
 	xil_printf("\nVariables Initialized");
 
@@ -77,17 +80,18 @@ QState InclineDisplay_on(InclineDisplay *me) {
 		case Q_ENTRY_SIG: {
 			xil_printf("\n\rPlaceHolder");
 			}
-		case READ_I2C: {
-			mpu_data_raw = get_mpu_data();
-			//cur_incline = raw_data.accel_x;
-			QActive_postISR((QActive *)&AO_InclineDisplay, GET_INCLINE);
+		// case READ_I2C: {
+		// 	mpu_data_raw = get_mpu_data();
+		// 	//cur_incline = raw_data.accel_x;
+		// 	QActive_postISR((QActive *)&AO_InclineDisplay, GET_INCLINE);
 
-			//int read_count = mpu_raw_data_struct.i2c_read_counter += 1; // Increment counter
-			//if (read_count > I2C_READ_MAX){
-			//	QActive_postISR((QActive *)&AO_InclineDisplay, GET_INCLINE);
-			//}
-			return Q_HANDLED();
-		}
+
+		// 	// int read_count = mpu_raw_data_struct.i2c_read_counter += 1; // Increment counter
+		// 	// if (read_count > NUM_INCLINE_AVG){
+		// 	// 	QActive_postISR((QActive *)&AO_InclineDisplay, GET_INCLINE);
+		// 	// }
+		// 	return Q_HANDLED();
+		// }
 		case TOGGLE_RIDE: {
 			if (ride_state == RIDE_ON){
 				ride_state = RIDE_PAUSE;
@@ -109,11 +113,34 @@ QState InclineDisplay_on(InclineDisplay *me) {
 		}
 		case GET_INCLINE: {
 			//cur_incline = mpu_data_raw.accel_x;
-			cur_incline = computeIncline(mpu_data_raw, 0.1);
+
+			//Get and compute the incline from the MPU
+			mpu_data_raw = get_mpu_data();
+			float raw_incline = computeIncline(mpu_data_raw, 0.1);
+
+			//Save Incline to array
+			raw_incline_array[raw_incline_index] = raw_incline;
+			raw_incline_index += 1;
+
+			//Return If not ready to take average
+			if(raw_incline_index < NUM_INCLINE_AVG){
+				return Q_HANDLED();
+			}
+
+			//Set cur_incline based on average all raw_incline_array of size NUM_INCLINE_AVG
+			cur_incline = 0.0f;
+            for (int i = 0; i < NUM_INCLINE_AVG; i++) {
+                cur_incline += raw_incline_array[i];
+            }
+            cur_incline /= NUM_INCLINE_AVG;		
+
+			//If in a ride currently add the incline to ride
 			if (ride_state == RIDE_ON){
 				UpdateRideArray(cur_incline);
 				UpdateRideInfo(cur_incline);
 			}
+
+
 			QActive_postISR((QActive *)&AO_InclineDisplay, UPDATE_INCLINE);
 			return Q_HANDLED();
 		}
