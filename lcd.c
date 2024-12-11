@@ -312,7 +312,7 @@ void displayHomeIncline(float incline){
 
 	//Print Current Incline
 	setColor(0,0,0);
-	fillRect(50,200,DISP_X_SIZE-50,200 + (incline * 10));
+	//fillRect(50,200,DISP_X_SIZE-50,200 + (incline * 10));
 
 	//Print Chart With Current Incline As Well
 	return;

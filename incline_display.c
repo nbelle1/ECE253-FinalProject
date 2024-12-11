@@ -239,7 +239,7 @@ void UpdateRideInfo(float incline){
 
 	// Update the average incline
 	ride_info.insert_array_count++; // Increment the count
-	ride_info.average_incline = ((ride_info.average_incline * (ride_info.insert_array_count - 1)) + cur_incline) / ride_info.insert_array_count;
+	//ride_info.average_incline = ((ride_info.average_incline * (ride_info.insert_array_count - 1)) + cur_incline) / ride_info.insert_array_count;
 
 
 	xil_printf("\nTODO: UpdateRideInfo");

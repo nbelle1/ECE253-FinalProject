@@ -37,6 +37,7 @@
 #include "xparameters.h"
 #include "xiic.h"
 #include "xil_printf.h"
+#include <math.h>
 #include "mpu_6050/driver_mpu6050_read_test.h"
 #include "mpu_6050/driver_mpu6050.h"
 #include "mpu_6050/driver_mpu6050_basic.h"
@@ -77,6 +78,10 @@ mpu_data_t get_mpu_data();
  * easily accessible from a debugger.
  */
 XIic Iic; /* The driver instance for IIC Device */
+
+
+Kalman_t KalmanX = {.Q_angle = 0.001f, .Q_bias = 0.003f, .R_measure = 0.03f};
+Kalman_t KalmanY = {.Q_angle = 0.001f, .Q_bias = 0.003f, .R_measure = 0.03f};
 
 
 
@@ -246,9 +251,69 @@ int mpu_data_read_test()
 	return XST_SUCCESS;
 }
 
-float computeIncline(mpu_data_t mpu_data, float dt){
-	xil_printf("Compute Incline TODO\r\n");
-	return mpu_data.accel_x;
+//float computeIncline(mpu_data_t mpu_data, float dt){
+//	xil_printf("Compute Incline TODO\r\n");
+//	mpu6050_interface_debug_print("\n  Accel_X: %.2f, Accel_Y: %.2f, Accel_Z: %.2f\r\n", mpu_data.accel_x, mpu_data.accel_y, mpu_data.accel_z);
+//	return mpu_data.accel_x;
+//}
+
+
+float computeIncline(mpu_data_t data, float dt)
+{
+	xil_printf("\n[DEBUG] Raw MPU Data:\r\n");
+	mpu6050_interface_debug_print("Accel_X: %.3f, Accel_Y: %.3f, Accel_Z: %.3f\r\n", data.accel_x, data.accel_y, data.accel_z);
+	mpu6050_interface_debug_print("Gyro_X: %.3f, Gyro_Y: %.3f\r\n", data.gyro_x, data.gyro_y);
+
+	double roll = atan2(data.accel_y, sqrt(data.accel_x * data.accel_x + data.accel_z * data.accel_z)) * RAD_TO_DEG;
+	mpu6050_interface_debug_print("\n[DEBUG] Computed Roll: %.3f degrees\r\n", roll);
+
+	double pitch = atan2(-data.accel_x, data.accel_z) * RAD_TO_DEG;
+	mpu6050_interface_debug_print("\n[DEBUG] Computed Pitch: %.3f degrees\r\n", pitch);
+
+	double filteredRoll = Kalman_getAngle(&KalmanX, roll, data.gyro_y, dt);
+	mpu6050_interface_debug_print("\n[DEBUG] Filtered Roll (Kalman): %.3f degrees\r\n", filteredRoll);
+
+	// might need to add in logic for MPU flipping past 90 degrees
+	double filteredPitch = Kalman_getAngle(&KalmanY, pitch, data.gyro_x, dt);
+	mpu6050_interface_debug_print("\n[DEBUG] Filtered Pitch (Kalman): %.3f degrees\r\n", filteredPitch);
+
+	return (float)filteredPitch;
+	//float newVal = 50.0;
+	//return newVal;
+
+	//return data.accel_x;
+}
+
+double Kalman_getAngle(Kalman_t *Kalman, double newAngle, double newRate, float dt)
+{
+	//mpu6050_interface_debug_print("\n[DEBUG] Kalman Filter Input:\r\n");
+	//mpu6050_interface_debug_print("\n  New Angle: %.3f, New Rate: %.3f, dt: %.3f\r\n", newAngle, newRate, dt);
+	double rate = newRate - Kalman->bias;
+	Kalman->angle += dt * rate;
+
+	Kalman->P[0][0] += dt * (dt * Kalman->P[1][1] - Kalman->P[0][1] - Kalman->P[1][0] + Kalman->Q_angle);
+	Kalman->P[0][1] -= dt * Kalman->P[1][1];
+	Kalman->P[1][0] -= dt * Kalman->P[1][1];
+	Kalman->P[1][1] += Kalman->Q_bias * dt;
+
+	double S = Kalman->P[0][0] + Kalman->R_measure;
+	double K[2];
+	K[0] = Kalman->P[0][0] / S;
+	K[1] = Kalman->P[1][0] / S;
+
+	double y = newAngle - Kalman->angle;
+	Kalman->angle += K[0] * y;
+	Kalman->bias += K[1] * y;
+
+	double P00_temp = Kalman->P[0][0];
+	double P01_temp = Kalman->P[0][1];
+
+	Kalman->P[0][0] -= K[0] * P00_temp;
+	Kalman->P[0][1] -= K[0] * P01_temp;
+	Kalman->P[1][0] -= K[1] * P00_temp;
+	Kalman->P[1][1] -= K[1] * P01_temp;
+
+	return Kalman->angle;
 }
 
 
