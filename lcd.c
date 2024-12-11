@@ -398,6 +398,8 @@ void updateRideInfo(RideInfo ride_info) {
     setFont(SmallFont);
     char buffer[16]; // Temporary buffer for converting numbers to strings
     int text_start_x = 35;
+	setColor(0,0,0);
+
 
     // Update minimum incline value
     sprintf(buffer, "%6.1f", ((int)(ride_info.min_incline * 10 + (ride_info.min_incline >= 0 ? 0.5 : -0.5))) / 10.0);
@@ -507,23 +509,23 @@ void displayRideArrayPlot(float ride_array[ARRAY_PLOT_LENGTH], RideInfo ride_inf
 	int y_min = 200;
 	int y_max = DISP_Y_SIZE - 20;
 	int y_mid = (y_max + y_min) / 2;
-	float mult = 0.3;
+	float mult = 0.5;
 
     setColor(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b);
 	fillRect(x_min, y_min, x_max, y_max);
 
 
 	for(int i = 0; i < ARRAY_PLOT_LENGTH; i++){
-		float y_val = -1 * ride_array[i] * mult;
+		float y_val = ride_array[i] * mult;
 		if(y_val > 0){
-			setColor(50,0,0);
+			setColor(175,0,0);
 		}
 		else {
-			setColor(0,50,0);
+			setColor(0,175,0);
 		}
 		int x1 = x_min + (i * ARRAY_PLOT_POINT_WIDTH);
 		int x2 = x1 + ARRAY_PLOT_POINT_WIDTH;
-		int y2 = (int)y_val + y_mid;
+		int y2 = -1 * (int)y_val + y_mid;
 
 		fillRect(x1, y_mid, x2, y2);
 	}
@@ -558,12 +560,27 @@ void displayRideCurIncline(float incline){
 void displayRideState(char *st){
 	//Print Background
 	setColor(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b);
-	fillRect(10,10,58,22);
+	fillRect(10,22,58,34);
 
 	//Print Font
 	setColor(0,0,0);
 	setFont(SmallFont);
-	lcdPrint(st,10,10);
+
+	char buffer[32]; // Temporary buffer for combining strings
+	sprintf(buffer, "Ride: %5s", st); // Format the string
+	lcdPrint(buffer, 10, 22); // Pass the formatted string to lcdPrint
+	return;
+}
+
+void displayInclineSensitivity(int num){
+
+	// Print Font
+	setColor(0, 0, 0);
+	setFont(SmallFont);
+
+	char buffer[32]; // Temporary buffer for combining strings
+	sprintf(buffer, "Sens: %3d", num); // Format the string
+	lcdPrint(buffer, 10, 10); // Pass the formatted string to lcdPrint
 	return;
 }
 

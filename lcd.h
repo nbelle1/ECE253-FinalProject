@@ -131,6 +131,8 @@ void updateRideInfo(RideInfo ride_info);
 void displayRideArrayPlot(float ride_array[ARRAY_PLOT_LENGTH], RideInfo ride_info);
 void displayRideCurIncline(float incline);
 
+
 void displayRideState(char *st);
+void displayInclineSensitivity(int num);
 
 #endif /* LCD_H_ */

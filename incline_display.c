@@ -4,7 +4,8 @@
 *****************************************************************************/
 
 //#define AO_InclineDisplay
-
+#include <stdint.h>
+#include <stdbool.h>
 #include "qpn_port.h"
 #include "bsp.h"
 #include "incline_display.h"
@@ -12,57 +13,50 @@
 #include "mpu6050.h"
 #include "xtmrctr.h"
 
+//Range of Degrees for cur_incline
+#define INCLINE_MAX 90
+#define INCLINE_MIN -90
 
+// I2C MPU data and Kalman Filter to Incline
+float cur_incline;
+mpu_data_t mpu_data_raw;
+volatile uint32_t last_compute_time = 0; // Time of the last computation in timer ticks
+extern XTmrCtr timer;
 
+//Ride Variables
+enum RideState ride_state;
+RideInfo ride_info;
 
-
-
-//ALL ADDED TO PROCESS RIDE ARRAYS
-#include <stdint.h>
-#include <stdbool.h>
-
+// Used To update Ride Plot with Ride Array
 #define QUEUE_SIZE 20
 #define RIDE_ARRAY_SIZE 2 * ARRAY_PLOT_LENGTH
-
-// Global variables
 static float incline_queue[QUEUE_SIZE];
 static float ride_array[RIDE_ARRAY_SIZE];
 static int queue_head = 0, queue_count = 0;
 static int ride_array_count = 0, temp_counter = 0;
 static int insert_array_count = 0, insert_array_interval = 5;
 static int update_time = 50;
-
-// Added by NB for Kalman filter
-volatile uint32_t last_compute_time = 0; // Time of the last computation in timer ticks
-extern XTmrCtr timer;
-
-
-
-
-
-
-
-
-
-enum RideState ride_state;
-volatile RideInfo ride_info;
-
-//float incline_queue[];
-//float ride_array[];
 float display_ride_array[ARRAY_PLOT_LENGTH];
 
-volatile float cur_incline;
-int raw_incline_index;
-float raw_incline_array[NUM_INCLINE_AVG];
+//Encoder Sensitivity Control
+#define SENSITIVITY_LUT_LENGTH 6
+int sensitivity_num = 3;
+float sensitivity_alpha = 1.0f;
+float sensitivity_lut[SENSITIVITY_LUT_LENGTH] = {
+	0.0005f,
+	0.005f,
+	0.05f,
+	0.25f,
+	0.5f,
+	1.0f,
+};
 
 
-mpu_data_t mpu_data_raw;
-
+//Helper Functions
+void handle_get_incline();
 const char* rideStateToString(enum RideState state);
 void UpdateRideArray(float incline);
 void UpdateRideInfo(float incline);
-
-
 
 
 typedef struct InclineDisplayTag  {               //InclineDisplay State machine
@@ -83,7 +77,6 @@ static QState InclineDisplay_Ride_View  (InclineDisplay *me);
 InclineDisplay AO_InclineDisplay;
 
 
-
 void InclineDisplay_ctor(void)  {
 	InclineDisplay *me = &AO_InclineDisplay;
 	QActive_ctor(&me->super, (QStateHandler)&InclineDisplay_initial);
@@ -91,12 +84,10 @@ void InclineDisplay_ctor(void)  {
 	//Initialize Variables
 	ride_state = RIDE_OFF;
 	cur_incline = 0.0;
-	raw_incline_index = 0;
 
 	xil_printf("\nVariables Initialized");
 
 }
-
 
 QState InclineDisplay_initial(InclineDisplay *me) {
 	xil_printf("\n\rInitialization");
@@ -106,6 +97,9 @@ QState InclineDisplay_initial(InclineDisplay *me) {
 	if (Status != XST_SUCCESS) {
 		xil_printf("MPU Initialization Failed\r\n");
 	}
+	//ride_state = RIDE_OFF;
+	//xil_printf("RIDE_STATE\r\n");
+
 
     return Q_TRAN(&InclineDisplay_on);
 }
@@ -114,20 +108,10 @@ QState InclineDisplay_on(InclineDisplay *me) {
 	switch (Q_SIG(me)) {
 		case Q_ENTRY_SIG: {
 			xil_printf("\n\rPlaceHolder");
+			return Q_HANDLED();
 		}
-		// case READ_I2C: {
-		// 	mpu_data_raw = get_mpu_data();
-		// 	//cur_incline = raw_data.accel_x;
-		// 	QActive_postISR((QActive *)&AO_InclineDisplay, GET_INCLINE);
-
-
-		// 	// int read_count = mpu_raw_data_struct.i2c_read_counter += 1; // Increment counter
-		// 	// if (read_count > NUM_INCLINE_AVG){
-		// 	// 	QActive_postISR((QActive *)&AO_InclineDisplay, GET_INCLINE);
-		// 	// }
-		// 	return Q_HANDLED();
-		// }
 		case TOGGLE_RIDE: {
+			xil_printf("\n\rRAN TOGGLE");
 			if (ride_state == RIDE_ON){
 				ride_state = RIDE_PAUSE;
 			}
@@ -146,56 +130,62 @@ QState InclineDisplay_on(InclineDisplay *me) {
 			QActive_postISR((QActive *)&AO_InclineDisplay, UPDATE_RIDE);
 			return Q_HANDLED();
 		}
-		case GET_INCLINE: {
-			//xil_printf("\n\In Get Incline");
-
-			//cur_incline = mpu_data_raw.accel_x;
-
-			// Added by NB to track actual time between Kalman Filter operations
-			// Get the current time in timer ticks
-			uint32_t current_time = XTmrCtr_GetValue(&timer, 0);
-
-			// Calculate the time difference in seconds (as a float)
-			float dt = (float)(current_time - last_compute_time) / (float)XPAR_AXI_TIMER_1_CLOCK_FREQ_HZ;
-
-			// Update the last computation time
-			last_compute_time = current_time;
-
-
-			//Get and compute the incline from the MPU
-			mpu_data_raw = get_mpu_data();
-			float raw_incline = computeIncline(mpu_data_raw, dt);
-
-			//Save Incline to array
-			raw_incline_array[raw_incline_index] = raw_incline;
-			raw_incline_index += 1;
-
-			//Return If not ready to take average
-			if(raw_incline_index < NUM_INCLINE_AVG){
-				//xil_printf("\n\NOT READY FOR AVERAGE");
-
-				return Q_HANDLED();
+//		case GET_INCLINE: {
+//			//xil_printf("\n\In Get Incline");
+//
+//			//cur_incline = mpu_data_raw.accel_x;
+//
+//			// Added by NB to track actual time between Kalman Filter operations
+//			// Get the current time in timer ticks
+//			uint32_t current_time = XTmrCtr_GetValue(&timer, 0);
+//
+//			// Calculate the time difference in seconds (as a float)
+//			float dt = (float)(current_time - last_compute_time) / (float)XPAR_AXI_TIMER_1_CLOCK_FREQ_HZ;
+//
+//			// Update the last computation time
+//			last_compute_time = current_time;
+//
+//
+//			//Get and compute the incline from the MPU
+//			mpu_data_raw = get_mpu_data();
+//			float raw_incline = computeIncline(mpu_data_raw, dt);
+//
+//			if(raw_incline > INCLINE_MAX){
+//				raw_incline = INCLINE_MAX;
+//			}
+//			else if(raw_incline < INCLINE_MIN){
+//				raw_incline = INCLINE_MIN;
+//			}
+//
+//            // Calculate smoothed incline
+//			cur_incline = sensitivity_alpha * raw_incline + (1 - sensitivity_alpha) * cur_incline;
+//
+//			//If in a ride currently add the incline to ride
+//			if (ride_state == RIDE_ON){
+//				UpdateRideArray(cur_incline);
+//				UpdateRideInfo(cur_incline);
+//			}
+//
+//
+//			QActive_postISR((QActive *)&AO_InclineDisplay, UPDATE_INCLINE);
+//			return Q_HANDLED();
+//		}
+		case ENCODER_DOWN: {
+			if (sensitivity_num > 1){
+				sensitivity_num -= 1;
+				sensitivity_alpha = sensitivity_lut[sensitivity_num -1 ];
 			}
-			raw_incline_index = 0;
-
-			//Set cur_incline based on average all raw_incline_array of size NUM_INCLINE_AVG
-			cur_incline = 0.0f;
-            for (int i = 0; i < NUM_INCLINE_AVG; i++) {
-                cur_incline += raw_incline_array[i];
-            }
-            cur_incline /= NUM_INCLINE_AVG;		
-
-			//If in a ride currently add the incline to ride
-			if (ride_state == RIDE_ON){
-				UpdateRideArray(cur_incline);
-				UpdateRideInfo(cur_incline);
-			}
-
-
-			QActive_postISR((QActive *)&AO_InclineDisplay, UPDATE_INCLINE);
+			displayInclineSensitivity(sensitivity_num);
 			return Q_HANDLED();
 		}
-			
+		case ENCODER_UP: {
+			if (sensitivity_num < SENSITIVITY_LUT_LENGTH){
+				sensitivity_num += 1;
+				sensitivity_alpha = sensitivity_lut[sensitivity_num - 1];
+			}
+			displayInclineSensitivity(sensitivity_num);
+			return Q_HANDLED();
+		}
 		case Q_INIT_SIG: {
 			return Q_TRAN(&InclineDisplay_Home_View);
 		}
@@ -215,6 +205,7 @@ QState InclineDisplay_Home_View(InclineDisplay *me) {
 			displayHomeBackground();
 			displayHomeIncline(cur_incline);
 			displayRideState(rideStateToString(ride_state));
+			displayInclineSensitivity(sensitivity_num);
 			return Q_HANDLED();
 		}
 		case TOGGLE_VIEW: {
@@ -222,6 +213,7 @@ QState InclineDisplay_Home_View(InclineDisplay *me) {
 		}
 		case UPDATE_INCLINE: {
 			//xil_printf("\n\IN UPDATE INCLINE");
+			handle_get_incline();
 			displayHomeIncline(cur_incline);
 			return Q_HANDLED();
 		}
@@ -239,13 +231,14 @@ QState InclineDisplay_Ride_View(InclineDisplay *me) {
 			displayRideArrayPlot(display_ride_array, ride_info);
 			displayRideCurIncline(cur_incline);
 			displayRideState(rideStateToString(ride_state));
-
+			displayInclineSensitivity(sensitivity_num);
 			return Q_HANDLED();
 		}
 		case TOGGLE_VIEW: {
 			return Q_TRAN(&InclineDisplay_Home_View);
 		}
 		case UPDATE_INCLINE: {
+			handle_get_incline();
 			displayRideCurIncline(cur_incline);
 			return Q_HANDLED();
 		}
@@ -255,7 +248,7 @@ QState InclineDisplay_Ride_View(InclineDisplay *me) {
 			displayRideArrayPlot(display_ride_array, ride_info);
 			//displayRideInfo(ride_info);
 			updateRideInfo(ride_info);
-			displayRideCurIncline(ride_state);
+			displayRideCurIncline(cur_incline);
 			return Q_HANDLED();
 		}
 	}
@@ -266,7 +259,40 @@ QState InclineDisplay_Ride_View(InclineDisplay *me) {
 
 /* Helper Functions */
 /**********************************************************************/
+void handle_get_incline(){
+	//cur_incline = mpu_data_raw.accel_x;
 
+	// Added by NB to track actual time between Kalman Filter operations
+	// Get the current time in timer ticks
+	uint32_t current_time = XTmrCtr_GetValue(&timer, 0);
+
+	// Calculate the time difference in seconds (as a float)
+	float dt = (float)(current_time - last_compute_time) / (float)XPAR_AXI_TIMER_1_CLOCK_FREQ_HZ;
+
+	// Update the last computation time
+	last_compute_time = current_time;
+
+
+	//Get and compute the incline from the MPU
+	mpu_data_raw = get_mpu_data();
+	float raw_incline = computeIncline(mpu_data_raw, dt);
+
+	if(raw_incline > INCLINE_MAX){
+		raw_incline = INCLINE_MAX;
+	}
+	else if(raw_incline < INCLINE_MIN){
+		raw_incline = INCLINE_MIN;
+	}
+
+	// Calculate smoothed incline
+	cur_incline = sensitivity_alpha * raw_incline + (1 - sensitivity_alpha) * cur_incline;
+
+	//If in a ride currently add the incline to ride
+	if (ride_state == RIDE_ON){
+		UpdateRideArray(cur_incline);
+		UpdateRideInfo(cur_incline);
+	}
+}
 
 
 // Circular buffer enqueue
@@ -398,7 +424,7 @@ void UpdateRideInfo(float incline){
 
 	// Update the average incline
 	ride_info.insert_array_count++; // Increment the count
-	//ride_info.average_incline = ((ride_info.average_incline * (ride_info.insert_array_count - 1)) + cur_incline) / ride_info.insert_array_count;
+	ride_info.average_incline = ((ride_info.average_incline * (ride_info.insert_array_count - 1)) + cur_incline) / ride_info.insert_array_count;
 
 	//xil_printf("\nTODO: UpdateRideInfo");
 	return;
