@@ -10,6 +10,8 @@
 #include "xintc.h"
 #include "xtmrctr.h"
 #include "xil_exception.h"
+#include <unistd.h>
+
 
 #include "xspi.h"
 #include "xspi_l.h"
@@ -410,6 +412,6 @@ void button_handler(void *CallbackRef){
 //		QActive_postISR((QActive *)&AO_InclineDisplay, MIDDLE_BUTTON);
 //	}
 
-
+	usleep(200000);
 	XGpio_InterruptClear(GpioPtr, 1);
 }

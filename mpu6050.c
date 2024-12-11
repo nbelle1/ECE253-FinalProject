@@ -260,24 +260,25 @@ int mpu_data_read_test()
 
 float computeIncline(mpu_data_t data, float dt)
 {
-	xil_printf("\n[DEBUG] Raw MPU Data:\r\n");
-	mpu6050_interface_debug_print("Accel_X: %.3f, Accel_Y: %.3f, Accel_Z: %.3f\r\n", data.accel_x, data.accel_y, data.accel_z);
-	mpu6050_interface_debug_print("Gyro_X: %.3f, Gyro_Y: %.3f\r\n", data.gyro_x, data.gyro_y);
+	//xil_printf("\n[DEBUG] Raw MPU Data:\r\n");
+	//mpu6050_interface_debug_print("Accel_X: %.3f, Accel_Y: %.3f, Accel_Z: %.3f\r\n", data.accel_x, data.accel_y, data.accel_z);
+	//mpu6050_interface_debug_print("Gyro_X: %.3f, Gyro_Y: %.3f\r\n", data.gyro_x, data.gyro_y);
 
 	double roll = atan2(data.accel_y, sqrt(data.accel_x * data.accel_x + data.accel_z * data.accel_z)) * RAD_TO_DEG;
-	mpu6050_interface_debug_print("\n[DEBUG] Computed Roll: %.3f degrees\r\n", roll);
+	//mpu6050_interface_debug_print("\n[DEBUG] Computed Roll: %.3f degrees\r\n", roll);
 
 	double pitch = atan2(-data.accel_x, data.accel_z) * RAD_TO_DEG;
-	mpu6050_interface_debug_print("\n[DEBUG] Computed Pitch: %.3f degrees\r\n", pitch);
+	//mpu6050_interface_debug_print("\n[DEBUG] Computed Pitch: %.3f degrees\r\n", pitch);
 
 	double filteredRoll = Kalman_getAngle(&KalmanX, roll, data.gyro_y, dt);
-	mpu6050_interface_debug_print("\n[DEBUG] Filtered Roll (Kalman): %.3f degrees\r\n", filteredRoll);
+	//mpu6050_interface_debug_print("\n[DEBUG] Filtered Roll (Kalman): %.3f degrees\r\n", filteredRoll);
 
 	// might need to add in logic for MPU flipping past 90 degrees
 	double filteredPitch = Kalman_getAngle(&KalmanY, pitch, data.gyro_x, dt);
-	mpu6050_interface_debug_print("\n[DEBUG] Filtered Pitch (Kalman): %.3f degrees\r\n", filteredPitch);
+	//mpu6050_interface_debug_print("\n[DEBUG] Filtered Pitch (Kalman): %.3f degrees\r\n", filteredPitch);
 
 	return (float)filteredPitch;
+	//return (float)pitch;
 	//float newVal = 50.0;
 	//return newVal;
 

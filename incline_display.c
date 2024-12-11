@@ -172,7 +172,8 @@ QState InclineDisplay_Ride_View(InclineDisplay *me) {
 		}
 		case UPDATE_RIDE: {
 			displayRideArrayPlot(display_ride_array, ride_info);
-			displayRideInfo(ride_info);
+			//displayRideInfo(ride_info);
+			updateRideInfo(ride_info);
 			displayRideCurIncline(ride_state);
 			return Q_HANDLED();
 		}
@@ -189,7 +190,7 @@ QState InclineDisplay_Ride_View(InclineDisplay *me) {
 
 int temp_counter = 0;
 void UpdateRideArray(float incline) {
-	xil_printf("\nTODO: UpdateRideArray");
+	//xil_printf("\nTODO: UpdateRideArray");
 	temp_counter += 1;
 	if(temp_counter > 10){
 		temp_counter = 0;
@@ -215,7 +216,7 @@ void UpdateRideInfo(float incline){
 	//ride_info.average_incline = ((ride_info.average_incline * (ride_info.insert_array_count - 1)) + cur_incline) / ride_info.insert_array_count;
 
 
-	xil_printf("\nTODO: UpdateRideInfo");
+	//xil_printf("\nTODO: UpdateRideInfo");
 	return;
 }
 

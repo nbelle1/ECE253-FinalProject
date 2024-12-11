@@ -79,6 +79,12 @@ struct _current_font
     u8 numchars;
 };
 
+typedef struct {
+    int r;  // Red
+    int g;  // Green
+    int b;  // Blue
+} RGB;
+
 extern int fch; // Foreground color upper byte
 extern int fcl; // Foreground color lower byte
 extern int bch; // Background color upper byte
@@ -120,6 +126,7 @@ void displayHomeIncline(float incline);
 
 void displayRideBackground();
 void displayRideInfo(RideInfo ride_info);
+void updateRideInfo(RideInfo ride_info);
 void displayRideArrayPlot(float ride_array[ARRAY_PLOT_LENGTH], RideInfo ride_info);
 void displayRideCurIncline(float incline);
 
