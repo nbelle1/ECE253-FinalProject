@@ -201,7 +201,8 @@ QState InclineDisplay_Ride_View(InclineDisplay *me) {
 		}
 		case UPDATE_RIDE: {
 			displayRideArrayPlot(display_ride_array, ride_info);
-			displayRideInfo(ride_info);
+			//displayRideInfo(ride_info);
+			updateRideInfo(ride_info);
 			displayRideCurIncline(ride_state);
 			return Q_HANDLED();
 		}
@@ -300,6 +301,7 @@ void UpdateRideArray(float incline) {
 int temp_counter = 0;
 int update_time = 10;
 void UpdateRideArray(float incline) {
+	//xil_printf("\nTODO: UpdateRideArray");
 	//xil_printf("\nTODO: UpdateRideArray");
 	temp_counter += 1;
 	int update_UI = temp_counter > update_time;
