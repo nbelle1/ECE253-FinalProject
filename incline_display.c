@@ -10,6 +10,7 @@
 #include "incline_display.h"
 #include "lcd.h"
 #include "mpu6050.h"
+#include "xtmrctr.h"
 
 
 
@@ -30,6 +31,10 @@ static int queue_head = 0, queue_count = 0;
 static int ride_array_count = 0, temp_counter = 0;
 static int insert_array_count = 0, insert_array_interval = 5;
 static int update_time = 50;
+
+// Added by NB for Kalman filter
+volatile uint32_t last_compute_time = 0; // Time of the last computation in timer ticks
+extern XTmrCtr timer;
 
 
 
@@ -146,9 +151,20 @@ QState InclineDisplay_on(InclineDisplay *me) {
 
 			//cur_incline = mpu_data_raw.accel_x;
 
+			// Added by NB to track actual time between Kalman Filter operations
+			// Get the current time in timer ticks
+			uint32_t current_time = XTmrCtr_GetValue(&timer, 0);
+
+			// Calculate the time difference in seconds (as a float)
+			float dt = (float)(current_time - last_compute_time) / (float)XPAR_AXI_TIMER_1_CLOCK_FREQ_HZ;
+
+			// Update the last computation time
+			last_compute_time = current_time;
+
+
 			//Get and compute the incline from the MPU
 			mpu_data_raw = get_mpu_data();
-			float raw_incline = computeIncline(mpu_data_raw, 0.12);
+			float raw_incline = computeIncline(mpu_data_raw, dt);
 
 			//Save Incline to array
 			raw_incline_array[raw_incline_index] = raw_incline;
