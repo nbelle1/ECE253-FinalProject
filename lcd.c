@@ -319,9 +319,6 @@ void displayHomeIncline(float incline){
 }
 
 
-
-
-
 //Ride View
 void displayRideBackground(){
 	//Set whole background
@@ -375,8 +372,31 @@ void displayRideInfo(RideInfo ride_info) {
 void displayRideArrayPlot(float ride_array[ARRAY_PLOT_LENGTH], RideInfo ride_info){
 
 	//Make a box that represetnts the ride_info.averge_incline in bounds 20,200,DISP_X_SIZE-20,DISP_Y_SIZE-20
-	setColor(0,0,0);
-	fillRect(20,200,DISP_X_SIZE-20,DISP_Y_SIZE-20);
+	int offset = 20;
+	int x_min = offset;
+	int x_max = offset + (ARRAY_PLOT_LENGTH * ARRAY_PLOT_POINT_WIDTH);
+	int y_min = 200;
+	int y_max = DISP_Y_SIZE - offset;
+	int y_mid = (y_max + y_min) / 2;
+	float mult = 0.5;
+
+
+	for(int i = 0; i < ARRAY_PLOT_LENGTH; i++){
+		float y_val = ride_array[i] * mult;
+		if(y_val > 0){
+			setColor(50,0,0);
+		}
+		else {
+			setColor(0,50,0);
+		}
+		int x1 = x_min + (i * ARRAY_PLOT_POINT_WIDTH);
+		int x2 = x1 + ARRAY_PLOT_POINT_WIDTH;
+		int y2 = int(y_val) + y_mind
+
+		fillRect(x1, x2, y1, y2);
+	}
+
+	//fillRect(20,200,DISP_X_SIZE-20,DISP_Y_SIZE-20);
 	return;
 }
 

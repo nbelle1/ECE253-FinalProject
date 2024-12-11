@@ -14,12 +14,14 @@
 enum RideState ride_state;
 volatile RideInfo ride_info;
 
+//float incline_queue[];
+//float ride_array[];
+//float display_ride_array[ARRAY_PLOT_LENGTH];
+
 volatile float cur_incline;
 int raw_incline_index;
 float raw_incline_array[NUM_INCLINE_AVG];
 
-float incline_queue[];
-float ride_array[];
 
 mpu_data_t mpu_data_raw;
 
@@ -56,7 +58,7 @@ void InclineDisplay_ctor(void)  {
 	//Initialize Variables
 	ride_state = RIDE_OFF;
 	cur_incline = 0.0;
-	cur_incline_index = 0;
+	raw_incline_index = 0;
 
 	xil_printf("\nVariables Initialized");
 
@@ -116,7 +118,7 @@ QState InclineDisplay_on(InclineDisplay *me) {
 
 			//Get and compute the incline from the MPU
 			mpu_data_raw = get_mpu_data();
-			float raw_incline = computeIncline(mpu_data_raw, 0.1);
+			float raw_incline = computeIncline(mpu_data_raw, 0.12);
 
 			//Save Incline to array
 			raw_incline_array[raw_incline_index] = raw_incline;
@@ -212,19 +214,137 @@ QState InclineDisplay_Ride_View(InclineDisplay *me) {
 /* Helper Functions */
 /**********************************************************************/
 
+#include <stdint.h>
+#include <stdbool.h>
 
+#define QUEUE_SIZE 20
+#define RIDE_ARRAY_SIZE 2 * ARRAY_PLOT_LENGTH
 
-int temp_counter = 0;
+// Global variables
+float display_ride_array[ARRAY_PLOT_LENGTH];
+
+static float incline_queue[QUEUE_SIZE];
+static float ride_array[RIDE_ARRAY_SIZE];
+static int queue_head = 0, queue_count = 0;
+static int ride_array_count = 0, temp_counter = 0;
+static int insert_array_count = 0, insert_array_interval = 5;
+static int update_time = 50;
+
+// Circular buffer enqueue
+void enqueue(float *queue, int *head, int *count, int size, float value) {
+    queue[*head] = value;
+    *head = (*head + 1) % size;
+    *count = (*count < size) ? (*count + 1) : size; // Cap count at max size
+}
+
+// Calculate average of a fixed-size buffer
+float calculate_average(float *array, int count) {
+    float sum = 0;
+    for (int i = 0; i < count; i++) {
+        sum += array[i];
+    }
+    return (count > 0) ? (sum / count) : 0;
+}
+
+// Main function to update ride array
 void UpdateRideArray(float incline) {
-	xil_printf("\nTODO: UpdateRideArray");
+    temp_counter++;
+
+    bool update_UI = (temp_counter > update_time);
+
+    if (insert_array_count < insert_array_interval) {
+        insert_array_count++;
+        enqueue(incline_queue, &queue_head, &queue_count, QUEUE_SIZE, incline);
+    } else {
+        insert_array_count = 0;
+        float new_incline = calculate_average(incline_queue, queue_count);
+        queue_count = 0; // Reset queue
+
+        // Add to ride array
+        if (ride_array_count < RIDE_ARRAY_SIZE) {
+            ride_array[ride_array_count++] = new_incline;
+        }
+
+        // Check if ride_array needs downsampling
+        if (ride_array_count > 2 * ARRAY_PLOT_LENGTH) {
+            int step = ride_array_count / ARRAY_PLOT_LENGTH;
+            float new_ride_array[ARRAY_PLOT_LENGTH];
+            for (int i = 0, j = 0; j < ARRAY_PLOT_LENGTH; i += step, j++) {
+                new_ride_array[j] = calculate_average(&ride_array[i], step);
+            }
+            for (int i = 0; i < ARRAY_PLOT_LENGTH; i++) {
+                ride_array[i] = new_ride_array[i];
+            }
+            ride_array_count = ARRAY_PLOT_LENGTH;
+            insert_array_interval++;
+        }
+    }
+
+    if (update_UI) {
+        temp_counter = 0;
+
+        // Update the display ride array logic
+        // Use only the last ARRAY_PLOT_LENGTH elements of ride_array
+        float display_ride_array[ARRAY_PLOT_LENGTH];
+        for (int i = 0; i < ARRAY_PLOT_LENGTH; i++) {
+            int idx = ride_array_count - ARRAY_PLOT_LENGTH + i;
+            display_ride_array[i] = (idx >= 0) ? ride_array[idx] : 0;
+        }
+
+        // Send update to UI (replace with actual function call)
+        QActive_postISR((QActive *)&AO_InclineDisplay, UPDATE_RIDE);
+    }
+}
+
+/*
+int temp_counter = 0;
+int update_time = 10;
+void UpdateRideArray(float incline) {
+	//xil_printf("\nTODO: UpdateRideArray");
 	temp_counter += 1;
-	if(temp_counter > 10){
+	int update_UI = temp_counter > update_time;
+
+	//If insert_array_count <= insert_array_interval
+		//insert_array_count += 1
+		//add incline to incline_queue
+
+	//else
+		//insert_array_count = 0
+		//new_incline = average of incline_queue
+
+		//add new_incline to ride_array
+
+		//if ride_array size > ARRAY_PLOT_LENGTH
+
+			//if ride_array size > x2 ARRAY_PLOT_LENGTH
+				//average all ride_array to size ARRAY_PLOT_LENGTH
+				//insert_array_interval += 1
+
+			//if update_ui
+				//set display_ride_array to the ARRAY_PLOT_LENGTH values at the end of the array
+
+		//else if ride_array size < ARRAY_PLOT_LENGTH
+
+			//mult = ARRAY_PLOT_LENGTH % ride_array_size + 1
+
+			//if update_ui
+				//for size of ride_array
+					//add ride_array to display_ride_array mult times until run out of space in display_ride_array (working backwards)
+
+		//Note** Make sure to convert floats to int
+
+	//If enough time has passed, to update ride UI
+	if(update_UI){
 		temp_counter = 0;
+
+		//Create display_ride_away with correct history of ride
+
+		//Send To Update UI
 		QActive_postISR((QActive *)&AO_InclineDisplay, UPDATE_RIDE);
 	}
 	return;
 }
-
+*/
 
 void UpdateRideInfo(float incline){
 	// Update the minimum incline
@@ -241,8 +361,7 @@ void UpdateRideInfo(float incline){
 	ride_info.insert_array_count++; // Increment the count
 	//ride_info.average_incline = ((ride_info.average_incline * (ride_info.insert_array_count - 1)) + cur_incline) / ride_info.insert_array_count;
 
-
-	xil_printf("\nTODO: UpdateRideInfo");
+	//xil_printf("\nTODO: UpdateRideInfo");
 	return;
 }
 
