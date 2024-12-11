@@ -9,7 +9,7 @@
 #include "qepn.h"
 #include "mpu6050.h"
 
-#define NUM_INCLINE_AVG 10
+#define NUM_INCLINE_AVG 1
 
 enum InclineDisplaySignals {
 	TOGGLE_VIEW = Q_USER_SIG,

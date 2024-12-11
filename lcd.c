@@ -506,7 +506,10 @@ void displayRideArrayPlot(float ride_array[ARRAY_PLOT_LENGTH], RideInfo ride_inf
 	int y_min = 200;
 	int y_max = DISP_Y_SIZE - offset;
 	int y_mid = (y_max + y_min) / 2;
-	float mult = 0.5;
+	float mult = 0.3;
+
+    setColor(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b);
+	fillRect(x_min, y_min, x_max, y_max);
 
 
 	for(int i = 0; i < ARRAY_PLOT_LENGTH; i++){
@@ -519,9 +522,9 @@ void displayRideArrayPlot(float ride_array[ARRAY_PLOT_LENGTH], RideInfo ride_inf
 		}
 		int x1 = x_min + (i * ARRAY_PLOT_POINT_WIDTH);
 		int x2 = x1 + ARRAY_PLOT_POINT_WIDTH;
-		int y2 = int(y_val) + y_mind
+		int y2 = (int)y_val + y_mid;
 
-		fillRect(x1, x2, y1, y2);
+		fillRect(x1, y_mid, x2, y2);
 	}
 
 	//fillRect(20,200,DISP_X_SIZE-20,DISP_Y_SIZE-20);

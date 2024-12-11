@@ -11,12 +11,40 @@
 #include "lcd.h"
 #include "mpu6050.h"
 
+
+
+
+
+
+//ALL ADDED TO PROCESS RIDE ARRAYS
+#include <stdint.h>
+#include <stdbool.h>
+
+#define QUEUE_SIZE 20
+#define RIDE_ARRAY_SIZE 2 * ARRAY_PLOT_LENGTH
+
+// Global variables
+static float incline_queue[QUEUE_SIZE];
+static float ride_array[RIDE_ARRAY_SIZE];
+static int queue_head = 0, queue_count = 0;
+static int ride_array_count = 0, temp_counter = 0;
+static int insert_array_count = 0, insert_array_interval = 5;
+static int update_time = 50;
+
+
+
+
+
+
+
+
+
 enum RideState ride_state;
 volatile RideInfo ride_info;
 
 //float incline_queue[];
 //float ride_array[];
-//float display_ride_array[ARRAY_PLOT_LENGTH];
+float display_ride_array[ARRAY_PLOT_LENGTH];
 
 volatile float cur_incline;
 int raw_incline_index;
@@ -81,7 +109,7 @@ QState InclineDisplay_on(InclineDisplay *me) {
 	switch (Q_SIG(me)) {
 		case Q_ENTRY_SIG: {
 			xil_printf("\n\rPlaceHolder");
-			}
+		}
 		// case READ_I2C: {
 		// 	mpu_data_raw = get_mpu_data();
 		// 	//cur_incline = raw_data.accel_x;
@@ -114,6 +142,8 @@ QState InclineDisplay_on(InclineDisplay *me) {
 			return Q_HANDLED();
 		}
 		case GET_INCLINE: {
+			//xil_printf("\n\In Get Incline");
+
 			//cur_incline = mpu_data_raw.accel_x;
 
 			//Get and compute the incline from the MPU
@@ -126,8 +156,11 @@ QState InclineDisplay_on(InclineDisplay *me) {
 
 			//Return If not ready to take average
 			if(raw_incline_index < NUM_INCLINE_AVG){
+				//xil_printf("\n\NOT READY FOR AVERAGE");
+
 				return Q_HANDLED();
 			}
+			raw_incline_index = 0;
 
 			//Set cur_incline based on average all raw_incline_array of size NUM_INCLINE_AVG
 			cur_incline = 0.0f;
@@ -172,6 +205,7 @@ QState InclineDisplay_Home_View(InclineDisplay *me) {
 			return Q_TRAN(&InclineDisplay_Ride_View);
 		}
 		case UPDATE_INCLINE: {
+			//xil_printf("\n\IN UPDATE INCLINE");
 			displayHomeIncline(cur_incline);
 			return Q_HANDLED();
 		}
@@ -200,6 +234,8 @@ QState InclineDisplay_Ride_View(InclineDisplay *me) {
 			return Q_HANDLED();
 		}
 		case UPDATE_RIDE: {
+			//xil_printf("\n\In Update Ride");
+
 			displayRideArrayPlot(display_ride_array, ride_info);
 			//displayRideInfo(ride_info);
 			updateRideInfo(ride_info);
@@ -215,21 +251,7 @@ QState InclineDisplay_Ride_View(InclineDisplay *me) {
 /* Helper Functions */
 /**********************************************************************/
 
-#include <stdint.h>
-#include <stdbool.h>
 
-#define QUEUE_SIZE 20
-#define RIDE_ARRAY_SIZE 2 * ARRAY_PLOT_LENGTH
-
-// Global variables
-float display_ride_array[ARRAY_PLOT_LENGTH];
-
-static float incline_queue[QUEUE_SIZE];
-static float ride_array[RIDE_ARRAY_SIZE];
-static int queue_head = 0, queue_count = 0;
-static int ride_array_count = 0, temp_counter = 0;
-static int insert_array_count = 0, insert_array_interval = 5;
-static int update_time = 50;
 
 // Circular buffer enqueue
 void enqueue(float *queue, int *head, int *count, int size, float value) {
@@ -286,7 +308,6 @@ void UpdateRideArray(float incline) {
 
         // Update the display ride array logic
         // Use only the last ARRAY_PLOT_LENGTH elements of ride_array
-        float display_ride_array[ARRAY_PLOT_LENGTH];
         for (int i = 0; i < ARRAY_PLOT_LENGTH; i++) {
             int idx = ride_array_count - ARRAY_PLOT_LENGTH + i;
             display_ride_array[i] = (idx >= 0) ? ride_array[idx] : 0;
