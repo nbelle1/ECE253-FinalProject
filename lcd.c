@@ -358,7 +358,7 @@ void displayRideInfo(RideInfo ride_info) {
     setFont(SmallFont);
     setColorBg(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b);
     char buffer[32]; // Temporary buffer for converting values to strings
-    int text_start_x = 20;
+    int text_start_x = 35;
     int text_start_y = 90;
     int line_spacing = 20;
 
@@ -366,57 +366,58 @@ void displayRideInfo(RideInfo ride_info) {
     sprintf(buffer, "Min Incline:");
     lcdPrint(buffer, text_start_x, text_start_y); // Label
     sprintf(buffer, "%6.1f", ((int)(ride_info.min_incline * 10 + (ride_info.min_incline >= 0 ? 0.5 : -0.5))) / 10.0);
-    lcdPrint(buffer, 140, text_start_y); // Value aligned
+    lcdPrint(buffer, text_start_x + 120, text_start_y); // Value aligned
 
     // Print maximum incline
     sprintf(buffer, "Max Incline:");
     lcdPrint(buffer, text_start_x, text_start_y + line_spacing); // Label
     sprintf(buffer, "%6.1f", ((int)(ride_info.max_incline * 10 + (ride_info.max_incline >= 0 ? 0.5 : -0.5))) / 10.0);
-    lcdPrint(buffer, 140, text_start_y + line_spacing); // Value aligned
+    lcdPrint(buffer, text_start_x + 120, text_start_y + line_spacing); // Value aligned
 
     // Print average incline
     sprintf(buffer, "Avg Incline:");
     lcdPrint(buffer, text_start_x, text_start_y + 2 * line_spacing); // Label
     sprintf(buffer, "%6.1f", ((int)(ride_info.average_incline * 10 + (ride_info.average_incline >= 0 ? 0.5 : -0.5))) / 10.0);
-    lcdPrint(buffer, 140, text_start_y + 2 * line_spacing); // Value aligned
+    lcdPrint(buffer, text_start_x + 120, text_start_y + 2 * line_spacing); // Value aligned
 
     // Print insert array count
-    sprintf(buffer, "Array Count:");
+    sprintf(buffer, "Time Elapsed:");
     lcdPrint(buffer, text_start_x, text_start_y + 3 * line_spacing); // Label
     sprintf(buffer, "%6d", ride_info.insert_array_count); // Fixed-width integer formatting
-    lcdPrint(buffer, 140, text_start_y + 3 * line_spacing); // Value aligned
+    lcdPrint(buffer, text_start_x + 120, text_start_y + 3 * line_spacing); // Value aligned
 
     // Print insert array interval
     sprintf(buffer, "Array Interval:");
     lcdPrint(buffer, text_start_x, text_start_y + 4 * line_spacing); // Label
     sprintf(buffer, "%6d", ride_info.insert_array_interval); // Fixed-width integer formatting
-    lcdPrint(buffer, 140, text_start_y + 4 * line_spacing); // Value aligned
+    lcdPrint(buffer, text_start_x + 120, text_start_y + 4 * line_spacing); // Value aligned
 
     return;
 }
 void updateRideInfo(RideInfo ride_info) {
     setFont(SmallFont);
     char buffer[16]; // Temporary buffer for converting numbers to strings
+    int text_start_x = 35;
 
     // Update minimum incline value
     sprintf(buffer, "%6.1f", ((int)(ride_info.min_incline * 10 + (ride_info.min_incline >= 0 ? 0.5 : -0.5))) / 10.0);
-    lcdPrint(buffer, 140, 90); // Value aligned
+    lcdPrint(buffer, text_start_x + 120, 90); // Value aligned
 
     // Update maximum incline value
     sprintf(buffer, "%6.1f", ((int)(ride_info.max_incline * 10 + (ride_info.max_incline >= 0 ? 0.5 : -0.5))) / 10.0);
-    lcdPrint(buffer, 140, 110); // Value aligned
+    lcdPrint(buffer, text_start_x + 120, 110); // Value aligned
 
     // Update average incline value
     sprintf(buffer, "%6.1f", ((int)(ride_info.average_incline * 10 + (ride_info.average_incline >= 0 ? 0.5 : -0.5))) / 10.0);
-    lcdPrint(buffer, 140, 130); // Value aligned
+    lcdPrint(buffer, text_start_x + 120, 130); // Value aligned
 
     // Update array count value
     sprintf(buffer, "%6d", ride_info.insert_array_count); // Fixed-width integer formatting
-    lcdPrint(buffer, 140, 150); // Value aligned
+    lcdPrint(buffer, text_start_x + 120, 150); // Value aligned
 
     // Update array interval value
     sprintf(buffer, "%6d", ride_info.insert_array_interval); // Fixed-width integer formatting
-    lcdPrint(buffer, 140, 170); // Value aligned
+    lcdPrint(buffer, text_start_x + 120, 170); // Value aligned
 
     return;
 }
@@ -500,11 +501,11 @@ void updateRideInfo(RideInfo ride_info) {
 void displayRideArrayPlot(float ride_array[ARRAY_PLOT_LENGTH], RideInfo ride_info){
 
 	//Make a box that represetnts the ride_info.averge_incline in bounds 20,200,DISP_X_SIZE-20,DISP_Y_SIZE-20
-	int offset = 20;
-	int x_min = offset;
-	int x_max = offset + (ARRAY_PLOT_LENGTH * ARRAY_PLOT_POINT_WIDTH);
+	//int offset = 50;
+	int x_min = 50;
+	int x_max = x_min + (ARRAY_PLOT_LENGTH * ARRAY_PLOT_POINT_WIDTH);
 	int y_min = 200;
-	int y_max = DISP_Y_SIZE - offset;
+	int y_max = DISP_Y_SIZE - 20;
 	int y_mid = (y_max + y_min) / 2;
 	float mult = 0.3;
 
@@ -513,7 +514,7 @@ void displayRideArrayPlot(float ride_array[ARRAY_PLOT_LENGTH], RideInfo ride_inf
 
 
 	for(int i = 0; i < ARRAY_PLOT_LENGTH; i++){
-		float y_val = ride_array[i] * mult;
+		float y_val = -1 * ride_array[i] * mult;
 		if(y_val > 0){
 			setColor(50,0,0);
 		}

@@ -40,6 +40,10 @@ u32 controlReg;
 
 // Timer Interrupt (Added by NB and DB)
 XTmrCtr sys_tmrctr;
+
+//Debouncing timer  (Added by NB)
+XTmrCtr timer;
+
 volatile int sleep_count = 0;
 
 // Suggest Creating two int's to use for determining the direction of twist
@@ -88,6 +92,7 @@ void BSP_init(void) {
 	xil_printf("Connected to Timer Interrupt Controller!\r\n");
 
 
+
 	// Encoder Interrupt Initialization
 	Status = XIntc_Connect(&sys_intc, XPAR_MICROBLAZE_0_AXI_INTC_ENCODER_IP2INTC_IRPT_INTR,
 			(XInterruptHandler) encoder_handler, &EncoderGpio);
@@ -127,6 +132,13 @@ void BSP_init(void) {
 	XTmrCtr_SetOptions(&sys_tmrctr, 0, XTC_INT_MODE_OPTION | XTC_AUTO_RELOAD_OPTION);
 	XTmrCtr_SetResetValue(&sys_tmrctr, 0, 0xFFFFFFFF - RESET_VALUE);// 1000 clk cycles @ 100MHz = 10us
 	XTmrCtr_Start(&sys_tmrctr, 0);
+
+	// Debouncing Timer Initialization
+	XTmrCtr_Initialize(&timer, XPAR_AXI_TIMER_1_DEVICE_ID);
+	uint32_t Control = XTmrCtr_GetOptions(&timer, 0) | XTC_CAPTURE_MODE_OPTION | XTC_INT_MODE_OPTION;
+	//XTmrCtr_SetResetValue(&timer, 0, 0xFFFFFFFF - 1000);
+	XTmrCtr_SetOptions(&timer, 0, Control);
+	XTmrCtr_Start(&timer, 0);
 
 	//Initialize SPI DC GPIO
 	Status = XGpio_Initialize(&dc, XPAR_SPI_DC_DEVICE_ID);
@@ -378,10 +390,23 @@ void encoder_handler(void *CallbackRef){
 
 
 
+uint32_t last_interrupt_time = 0; // Store last debounce time in timer ticks
 
 // Button Interrupt Handler and Related Functions
 void button_handler(void *CallbackRef){
 	XGpio *GpioPtr = (XGpio *)CallbackRef;
+
+	// Read the current timer value
+	uint32_t current_time = XTmrCtr_GetValue(&timer, 0);
+
+	// Check if the debounce period has elapsed (200 ms in ticks)
+	if ((current_time - last_interrupt_time) < (XPAR_AXI_TIMER_1_CLOCK_FREQ_HZ / 5)) { // 200 ms debounce
+		XGpio_InterruptClear(GpioPtr, 1);
+		return;
+	}
+
+	// Update the last interrupt time
+	last_interrupt_time = current_time;
 
 	unsigned int btn = XGpio_DiscreteRead(&BtnGpio, 1);
 	//xil_printf("Button interrupt\n");
@@ -412,6 +437,6 @@ void button_handler(void *CallbackRef){
 //		QActive_postISR((QActive *)&AO_InclineDisplay, MIDDLE_BUTTON);
 //	}
 
-	usleep(200000);
+	//usleep(200000);
 	XGpio_InterruptClear(GpioPtr, 1);
 }

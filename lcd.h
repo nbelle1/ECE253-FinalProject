@@ -119,8 +119,8 @@ void decreaseVolume(int volume);
 
 
 //Incline Display Functions
-#define ARRAY_PLOT_LENGTH 32
-#define ARRAY_PLOT_POINT_WIDTH 1
+#define ARRAY_PLOT_LENGTH 64
+#define ARRAY_PLOT_POINT_WIDTH 2
 
 void displayHomeBackground();
 void displayHomeIncline(float incline);

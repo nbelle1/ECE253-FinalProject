@@ -263,7 +263,7 @@ float computeIncline(mpu_data_t data, float dt)
 	//xil_printf("\n[DEBUG] Raw MPU Data:\r\n");
 	//mpu6050_interface_debug_print("Accel_X: %.3f, Accel_Y: %.3f, Accel_Z: %.3f\r\n", data.accel_x, data.accel_y, data.accel_z);
 	//mpu6050_interface_debug_print("Gyro_X: %.3f, Gyro_Y: %.3f\r\n", data.gyro_x, data.gyro_y);
-
+	//mpu6050_interface_debug_print("\n[DEBUG] dt: %.3f seconds\r\n", dt);
 	double roll = atan2(data.accel_y, sqrt(data.accel_x * data.accel_x + data.accel_z * data.accel_z)) * RAD_TO_DEG;
 	//mpu6050_interface_debug_print("\n[DEBUG] Computed Roll: %.3f degrees\r\n", roll);
 
