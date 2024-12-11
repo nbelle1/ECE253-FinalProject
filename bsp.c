@@ -252,7 +252,7 @@ void timer_handler() {
 	ControlStatusReg = XTimerCtr_ReadReg(sys_tmrctr.BaseAddress, 0, XTC_TCSR_OFFSET);
 
 
-	QActive_postISR((QActive *)&AO_InclineDisplay, GET_INCLINE);
+	QActive_postISR((QActive *)&AO_InclineDisplay, UPDATE_INCLINE);
 
 	/*
 	 * Acknowledge the interrupt by clearing the interrupt
@@ -286,104 +286,104 @@ enum STATE {
 void encoder_handler(void *CallbackRef){
 	//xil_printf("Encoder Trigger\n");
 	XGpio *GpioPtr = (XGpio *)CallbackRef;
-//	int cur_pin = XGpio_DiscreteRead(&EncoderGpio, 1);
-//	sleep_count = 0;
-//
-//	if(cur_pin == BUTTON_DOWN){
-//		//Send Encoder Down Signal
-//		//xil_printf("Encoder Click Signal\n");
-//    	QActive_postISR((QActive *)&AO_InclineDisplay, ENCODER_CLICK);
-//
-//		//Time Based De-bouncing
-//		usleep(200000);
-//		//reset_pin();
-//		//continue;
-//	}
-//	else{
-//		switch(current_encoder_state){
-//			case S0_START:
-//				switch (cur_pin) {
-//					case P1HIGH_P2LOW:
-//						current_encoder_state = S2_CW_1;
-//						break;
-//					case P1LOW_P2HIGH:
-//						current_encoder_state = S1_CCW_1;
-//						break;
-//				}
-//				break;
-//			case S1_CCW_1:
-//				switch (cur_pin) {
-//					case P1HIGH_P2HIGH:
-//						current_encoder_state = S0_START;
-//						break;
-//					case P1LOW_P2LOW:
-//						current_encoder_state = S3_CCW_2;
-//						break;
-//				}
-//				break;
-//			case S2_CW_1:
-//				switch (cur_pin) {
-//					case P1HIGH_P2HIGH:
-//						current_encoder_state = S0_START;
-//						break;
-//					case P1LOW_P2LOW:
-//						current_encoder_state = S4_CW_2;
-//						break;
-//				}
-//				break;
-//			case S3_CCW_2:
-//				switch (cur_pin) {
-//					case P1LOW_P2HIGH:
-//						current_encoder_state = S1_CCW_1;
-//						break;
-//					case P1HIGH_P2LOW:
-//						current_encoder_state = S5_CCW_3;
-//						break;
-//				}
-//				break;
-//			case S4_CW_2:
-//				switch (cur_pin) {
-//					case P1HIGH_P2LOW:
-//						current_encoder_state = S2_CW_1;
-//						break;
-//					case P1LOW_P2HIGH:
-//						current_encoder_state = S6_CW_3;
-//						break;
-//				}
-//				break;
-//			case S5_CCW_3:
-//				switch (cur_pin) {
-//					case P1LOW_P2LOW:
-//						current_encoder_state = S3_CCW_2;
-//						break;
-//					case P1HIGH_P2HIGH:
-//						//Update LED CCW
-//						//xil_printf("Encoder Down Signal\n");
-//						QActive_postISR((QActive *)&AO_InclineDisplay, ENCODER_DOWN);
-//
-//						//current_position = led_left(current_position);
-//						current_encoder_state = S0_START;
-//						break;
-//				}
-//				break;
-//			case S6_CW_3:
-//				switch (cur_pin) {
-//					case P1LOW_P2LOW:
-//						current_encoder_state = S4_CW_2;
-//						break;
-//					case P1HIGH_P2HIGH:
-//						//Update LED CW
-//						//xil_printf("Encoder Right Signal\n");
-//						QActive_postISR((QActive *)&AO_InclineDisplay, ENCODER_UP);
-//
-//						current_encoder_state = S0_START;
-//						//current_position = led_right(current_position);
-//						break;
-//				}
-//				break;
-//		}
-//	}
-//
+	int cur_pin = XGpio_DiscreteRead(&EncoderGpio, 1);
+	sleep_count = 0;
+
+	if(cur_pin == BUTTON_DOWN){
+		//Send Encoder Down Signal
+		//xil_printf("Encoder Click Signal\n");
+    	QActive_postISR((QActive *)&AO_InclineDisplay, TOGGLE_VIEW);
+
+		//Time Based De-bouncing
+		usleep(200000);
+		//reset_pin();
+		//continue;
+	}
+	else{
+		switch(current_encoder_state){
+			case S0_START:
+				switch (cur_pin) {
+					case P1HIGH_P2LOW:
+						current_encoder_state = S2_CW_1;
+						break;
+					case P1LOW_P2HIGH:
+						current_encoder_state = S1_CCW_1;
+						break;
+				}
+				break;
+			case S1_CCW_1:
+				switch (cur_pin) {
+					case P1HIGH_P2HIGH:
+						current_encoder_state = S0_START;
+						break;
+					case P1LOW_P2LOW:
+						current_encoder_state = S3_CCW_2;
+						break;
+				}
+				break;
+			case S2_CW_1:
+				switch (cur_pin) {
+					case P1HIGH_P2HIGH:
+						current_encoder_state = S0_START;
+						break;
+					case P1LOW_P2LOW:
+						current_encoder_state = S4_CW_2;
+						break;
+				}
+				break;
+			case S3_CCW_2:
+				switch (cur_pin) {
+					case P1LOW_P2HIGH:
+						current_encoder_state = S1_CCW_1;
+						break;
+					case P1HIGH_P2LOW:
+						current_encoder_state = S5_CCW_3;
+						break;
+				}
+				break;
+			case S4_CW_2:
+				switch (cur_pin) {
+					case P1HIGH_P2LOW:
+						current_encoder_state = S2_CW_1;
+						break;
+					case P1LOW_P2HIGH:
+						current_encoder_state = S6_CW_3;
+						break;
+				}
+				break;
+			case S5_CCW_3:
+				switch (cur_pin) {
+					case P1LOW_P2LOW:
+						current_encoder_state = S3_CCW_2;
+						break;
+					case P1HIGH_P2HIGH:
+						//Update LED CCW
+						//xil_printf("Encoder Down Signal\n");
+						QActive_postISR((QActive *)&AO_InclineDisplay, ENCODER_DOWN);
+
+						//current_position = led_left(current_position);
+						current_encoder_state = S0_START;
+						break;
+				}
+				break;
+			case S6_CW_3:
+				switch (cur_pin) {
+					case P1LOW_P2LOW:
+						current_encoder_state = S4_CW_2;
+						break;
+					case P1HIGH_P2HIGH:
+						//Update LED CW
+						//xil_printf("Encoder Right Signal\n");
+						QActive_postISR((QActive *)&AO_InclineDisplay, ENCODER_UP);
+
+						current_encoder_state = S0_START;
+						//current_position = led_right(current_position);
+						break;
+				}
+				break;
+		}
+	}
+
 
 	XGpio_InterruptClear(GpioPtr, 1);
 }
@@ -400,7 +400,7 @@ void button_handler(void *CallbackRef){
 	uint32_t current_time = XTmrCtr_GetValue(&timer, 0);
 
 	// Check if the debounce period has elapsed (200 ms in ticks)
-	if ((current_time - last_interrupt_time) < (XPAR_AXI_TIMER_1_CLOCK_FREQ_HZ / 5)) { // 200 ms debounce
+	if ((current_time - last_interrupt_time) < (XPAR_AXI_TIMER_1_CLOCK_FREQ_HZ / 2)) { // 200 ms debounce
 		XGpio_InterruptClear(GpioPtr, 1);
 		return;
 	}
