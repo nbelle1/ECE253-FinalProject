@@ -109,7 +109,7 @@ QState InclineDisplay_on(InclineDisplay *me) {
 		}
 		case GET_INCLINE: {
 			//cur_incline = mpu_data_raw.accel_x;
-			cur_incline = computeIncline(mpu_data_raw, 0.1);
+			cur_incline = computeIncline(mpu_data_raw, 0.12);
 			if (ride_state == RIDE_ON){
 				UpdateRideArray(cur_incline);
 				UpdateRideInfo(cur_incline);
@@ -212,7 +212,7 @@ void UpdateRideInfo(float incline){
 
 	// Update the average incline
 	ride_info.insert_array_count++; // Increment the count
-	ride_info.average_incline = ((ride_info.average_incline * (ride_info.insert_array_count - 1)) + cur_incline) / ride_info.insert_array_count;
+	//ride_info.average_incline = ((ride_info.average_incline * (ride_info.insert_array_count - 1)) + cur_incline) / ride_info.insert_array_count;
 
 
 	xil_printf("\nTODO: UpdateRideInfo");
