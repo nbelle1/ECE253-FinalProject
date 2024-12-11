@@ -51,6 +51,7 @@ int fch;
 int fcl;
 int bch;
 int bcl;
+volatile RGB currentBackgroundColor = {255, 255, 255}; // Default white
 
 
 struct _current_font cfont;
@@ -289,6 +290,11 @@ void lcdPrint(char *st, int x, int y) {
 //Home View
 void displayHomeBackground(){
 	//Set background color
+	// Store current background color
+	currentBackgroundColor.r = 69;
+	currentBackgroundColor.g = 208;
+	currentBackgroundColor.b = 223;
+
 	setColor(69, 208, 223);
 	setColorBg(69, 208, 223);
 	fillRect(0,0,DISP_X_SIZE,DISP_Y_SIZE);
@@ -302,13 +308,21 @@ void displayHomeBackground(){
 }
 void displayHomeIncline(float incline){
 	char st[16]; // Buffer to hold the converted string
-	sprintf(st, "%.2f", incline); // Convert float to string with 2 decimal places
+	//sprintf(st, "%.2f", incline); // Convert float to string with 2 decimal places
 
+	float roundedIncline = ((int)(incline * 10 + (incline >= 0 ? 0.5 : -0.5))) / 10.0;
+
+	// Format the string to align the tenths place
+	if (roundedIncline >= 0) {
+		sprintf(st, "%6.1f", roundedIncline); // Align with 6 characters, space for positive numbers
+	} else {
+		sprintf(st, "%6.1f", roundedIncline); // Align negative numbers similarly
+	}
 
 	//Print Font
 	setColor(0,0,0);
 	setFont(BigFont);
-	lcdPrint(st,75,50);
+	lcdPrint(st,60,50);
 
 	//Print Current Incline
 	setColor(0,0,0);
@@ -325,6 +339,11 @@ void displayHomeIncline(float incline){
 //Ride View
 void displayRideBackground(){
 	//Set whole background
+
+	currentBackgroundColor.r = 208;
+	currentBackgroundColor.g = 69;
+	currentBackgroundColor.b = 223;
+
 	setColor(208, 69, 223);
 	setColorBg(208, 69, 233);
 	fillRect(0,0,DISP_X_SIZE,DISP_Y_SIZE);
@@ -333,42 +352,151 @@ void displayRideBackground(){
 	//Print Font
 	setColor(0,0,0);
 	setFont(SmallFont);
+	setColorBg(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b);
 	lcdPrint("Ride View",150,10);
 
 	return;
 }
-
 void displayRideInfo(RideInfo ride_info) {
     setFont(SmallFont);
+    setColorBg(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b);
     char buffer[32]; // Temporary buffer for converting values to strings
+    int text_start_x = 20;
+    int text_start_y = 90;
+    int line_spacing = 20;
 
     // Print minimum incline
-    sprintf(buffer, "Min Incline: %s%.3f", (ride_info.min_incline >= 0 ? " " : ""), ride_info.min_incline);
-    lcdPrint(buffer, 10, 90); // Display at position (10, 90)
-    xil_printf("\n%s", buffer);
+    sprintf(buffer, "Min Incline:");
+    lcdPrint(buffer, text_start_x, text_start_y); // Label
+    sprintf(buffer, "%6.1f", ((int)(ride_info.min_incline * 10 + (ride_info.min_incline >= 0 ? 0.5 : -0.5))) / 10.0);
+    lcdPrint(buffer, 140, text_start_y); // Value aligned
 
     // Print maximum incline
-    sprintf(buffer, "Max Incline: %s%.3f", (ride_info.max_incline >= 0 ? " " : ""), ride_info.max_incline);
-    lcdPrint(buffer, 10, 110); // Display below the previous line
-    xil_printf("\n%s", buffer);
+    sprintf(buffer, "Max Incline:");
+    lcdPrint(buffer, text_start_x, text_start_y + line_spacing); // Label
+    sprintf(buffer, "%6.1f", ((int)(ride_info.max_incline * 10 + (ride_info.max_incline >= 0 ? 0.5 : -0.5))) / 10.0);
+    lcdPrint(buffer, 140, text_start_y + line_spacing); // Value aligned
 
     // Print average incline
-    sprintf(buffer, "Avg Incline: %s%.3f", (ride_info.average_incline >= 0 ? " " : ""), ride_info.average_incline);
-    lcdPrint(buffer, 10, 130); // Display below the previous line
-    xil_printf("\n%s", buffer);
+    sprintf(buffer, "Avg Incline:");
+    lcdPrint(buffer, text_start_x, text_start_y + 2 * line_spacing); // Label
+    sprintf(buffer, "%6.1f", ((int)(ride_info.average_incline * 10 + (ride_info.average_incline >= 0 ? 0.5 : -0.5))) / 10.0);
+    lcdPrint(buffer, 140, text_start_y + 2 * line_spacing); // Value aligned
 
     // Print insert array count
-    sprintf(buffer, "Array Count: %d", ride_info.insert_array_count);
-    lcdPrint(buffer, 10, 150); // Display below the previous line
-    xil_printf("\n%s", buffer);
+    sprintf(buffer, "Array Count:");
+    lcdPrint(buffer, text_start_x, text_start_y + 3 * line_spacing); // Label
+    sprintf(buffer, "%6d", ride_info.insert_array_count); // Fixed-width integer formatting
+    lcdPrint(buffer, 140, text_start_y + 3 * line_spacing); // Value aligned
 
     // Print insert array interval
-    sprintf(buffer, "Array Interval: %d", ride_info.insert_array_interval);
-    lcdPrint(buffer, 10, 170); // Display below the previous line
-    xil_printf("\n%s", buffer);
+    sprintf(buffer, "Array Interval:");
+    lcdPrint(buffer, text_start_x, text_start_y + 4 * line_spacing); // Label
+    sprintf(buffer, "%6d", ride_info.insert_array_interval); // Fixed-width integer formatting
+    lcdPrint(buffer, 140, text_start_y + 4 * line_spacing); // Value aligned
 
     return;
 }
+void updateRideInfo(RideInfo ride_info) {
+    setFont(SmallFont);
+    char buffer[16]; // Temporary buffer for converting numbers to strings
+
+    // Update minimum incline value
+    sprintf(buffer, "%6.1f", ((int)(ride_info.min_incline * 10 + (ride_info.min_incline >= 0 ? 0.5 : -0.5))) / 10.0);
+    lcdPrint(buffer, 140, 90); // Value aligned
+
+    // Update maximum incline value
+    sprintf(buffer, "%6.1f", ((int)(ride_info.max_incline * 10 + (ride_info.max_incline >= 0 ? 0.5 : -0.5))) / 10.0);
+    lcdPrint(buffer, 140, 110); // Value aligned
+
+    // Update average incline value
+    sprintf(buffer, "%6.1f", ((int)(ride_info.average_incline * 10 + (ride_info.average_incline >= 0 ? 0.5 : -0.5))) / 10.0);
+    lcdPrint(buffer, 140, 130); // Value aligned
+
+    // Update array count value
+    sprintf(buffer, "%6d", ride_info.insert_array_count); // Fixed-width integer formatting
+    lcdPrint(buffer, 140, 150); // Value aligned
+
+    // Update array interval value
+    sprintf(buffer, "%6d", ride_info.insert_array_interval); // Fixed-width integer formatting
+    lcdPrint(buffer, 140, 170); // Value aligned
+
+    return;
+}
+
+//void displayRideInfo(RideInfo ride_info) {
+//    setFont(SmallFont);
+//    setColorBg(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b);
+//    char buffer[32]; // Temporary buffer for converting values to strings
+//    int text_start_x = 20;
+//    int text_start_y = 90;
+//    int line_spacing = 20;
+//
+//    // Print minimum incline
+//    sprintf(buffer, "Min Incline:");
+//    lcdPrint(buffer, text_start_x, text_start_y); // Display at position (10, 90)
+//    sprintf(buffer, "%s%.3f", (ride_info.min_incline >= 0 ? " " : ""), ride_info.min_incline);
+//    lcdPrint(buffer, 140, 90); // X position matches the value column from displayRideInfo
+//    //xil_printf("\n%s", buffer);
+//
+//    // Print maximum incline
+//    sprintf(buffer, "Max Incline:");
+//    lcdPrint(buffer, text_start_x, text_start_y + line_spacing); // Display below the previous line
+//    sprintf(buffer, "%s%.3f", (ride_info.max_incline >= 0 ? " " : ""), ride_info.max_incline);
+//    lcdPrint(buffer, 140, 110); // X position matches the value column from displayRideInfo
+//    //xil_printf("\n%s", buffer);
+//
+//    // Print average incline
+//    sprintf(buffer, "Avg Incline:");
+//    lcdPrint(buffer, text_start_x, text_start_y + 2 * line_spacing); // Display below the previous line
+//    sprintf(buffer, "%s%.3f", (ride_info.average_incline >= 0 ? " " : ""), ride_info.average_incline);
+//    lcdPrint(buffer, 140, 130); // X position matches the value column from displayRideInfo
+//    //xil_printf("\n%s", buffer);
+//
+//    // Print insert array count
+//    sprintf(buffer, "Array Count:");
+//    lcdPrint(buffer, text_start_x, text_start_y + 3 * line_spacing); // Display below the previous line
+//    sprintf(buffer, " %d", ride_info.insert_array_count);
+//    lcdPrint(buffer, 140, 150); // X position matches the value column from displayRideInfo
+//    //xil_printf("\n%s", buffer);
+//
+//    // Print insert array interval
+//    sprintf(buffer, "Array Interval:");
+//    lcdPrint(buffer, text_start_x, text_start_y + 4 * line_spacing); // Display below the previous line
+//    sprintf(buffer, " %d", ride_info.insert_array_interval);
+//    lcdPrint(buffer, 140, 170); // X position matches the value column from displayRideInfo
+//    //xil_printf("\n%s", buffer);
+//
+//    return;
+//}
+//
+//void updateRideInfo(RideInfo ride_info) {
+//    setFont(SmallFont);
+//    char buffer[16]; // Temporary buffer for converting numbers to strings
+//
+//    // Update minimum incline value
+//    sprintf(buffer, "%s%.3f", (ride_info.min_incline >= 0 ? " " : ""), ride_info.min_incline);
+//    lcdPrint(buffer, 140, 90); // X position matches the value column from displayRideInfo
+//
+//    // Update maximum incline value
+//    sprintf(buffer, "%s%.3f", (ride_info.max_incline >= 0 ? " " : ""), ride_info.max_incline);
+//    lcdPrint(buffer, 140, 110); // X position matches the value column from displayRideInfo
+//
+//    // Update average incline value
+//    sprintf(buffer, "%s%.3f", (ride_info.average_incline >= 0 ? " " : ""), ride_info.average_incline);
+//    lcdPrint(buffer, 140, 130); // X position matches the value column from displayRideInfo
+//
+//    // Update array count value
+//    sprintf(buffer, " %d", ride_info.insert_array_count);
+//    lcdPrint(buffer, 140, 150); // X position matches the value column from displayRideInfo
+//
+//    // Update array interval value
+//    sprintf(buffer, " %d", ride_info.insert_array_interval);
+//    lcdPrint(buffer, 140, 170); // X position matches the value column from displayRideInfo
+//
+//    return;
+//}
+
 
 
 
@@ -384,13 +512,20 @@ void displayRideCurIncline(float incline){
 
 	// Convert float to string
 	char st[16]; // Buffer to hold the converted string
-	sprintf(st, "%.2f", incline); // Convert float to string with 2 decimal places
+	float roundedIncline = ((int)(incline * 10 + (incline >= 0 ? 0.5 : -0.5))) / 10.0;
+
+	// Format the string to align the tenths place
+	if (roundedIncline >= 0) {
+		sprintf(st, "%6.1f", roundedIncline); // Align with 6 characters, space for positive numbers
+	} else {
+		sprintf(st, "%6.1f", roundedIncline); // Align negative numbers similarly
+	}
 
 
 	//Print Font
 	setColor(0,0,0);
 	setFont(BigFont);
-	lcdPrint(st,75,50);
+	lcdPrint(st,60,50);
 
 	return;
 }
@@ -398,6 +533,7 @@ void displayRideCurIncline(float incline){
 //Shared
 void displayRideState(char *st){
 	//Print Background
+	setColor(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b);
 	fillRect(10,10,58,22);
 
 	//Print Font
