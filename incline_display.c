@@ -30,16 +30,20 @@ RideInfo ride_info;
 //Filter Variables
 enum FilterState filter_state;
 
-// Used To update Ride Plot with Ride Array
-#define QUEUE_SIZE 20
+// Used To update Ride Plot with total Inclin History Array
+#define QUEUE_SIZE 256
 #define RIDE_ARRAY_SIZE 2 * ARRAY_PLOT_LENGTH
 static float incline_queue[QUEUE_SIZE];
 static float ride_array[RIDE_ARRAY_SIZE];
 static int queue_head = 0, queue_count = 0;
 static int ride_array_count = 0, temp_counter = 0;
-static int insert_array_count = 0, insert_array_interval = 5;
+static int insert_array_count = 0, insert_array_interval = 1;
 static int update_time = 50;
 float display_ride_array[ARRAY_PLOT_LENGTH];
+
+// Used To update Ride Plot with Current Incoming Incline
+float current_inclines[ARRAY_PLOT_LENGTH];
+int current_incline_index = 0;
 
 //Encoder Sensitivity Control
 #define SENSITIVITY_LUT_LENGTH 6
@@ -90,6 +94,16 @@ void InclineDisplay_ctor(void)  {
 	cur_incline = 0.0;
 	sensitivity_alpha = sensitivity_lut[sensitivity_num -1];
 
+	for(int i = 0; i < ARRAY_PLOT_LENGTH; i++){
+		current_inclines[i] = 0.0;
+	}
+
+	for(int i = 0; i < RIDE_ARRAY_SIZE; i++) {
+		ride_array[i] = 0.0;
+	}
+
+
+
 	xil_printf("\nVariables Initialized");
 
 }
@@ -134,21 +148,35 @@ QState InclineDisplay_on(InclineDisplay *me) {
 			ride_state = RIDE_OFF;
 			displayRideState(rideStateToString(ride_state));
 
+//			//Show The History Of The Last ride
+//			for (int i = 0; i < ARRAY_PLOT_LENGTH; i++) {
+//				xil_printf("\n\r %d: %d", i, (int)ride_array[i]);
+//			}
+//			for (int i = 0; i < ARRAY_PLOT_LENGTH; i++) {
+//				int idx = ride_array_count - ARRAY_PLOT_LENGTH + i;
+//				display_ride_array[i] = (idx >= 0) ? ride_array[idx] : 0;
+//			}
+
+
+			memset(&display_ride_array, 0, sizeof(display_ride_array));
+
 			//Delete and Reset Current Ride information
 			memset(&ride_info, 0, sizeof(RideInfo));
 
 			//Reset Ride Plot Variables
-			memset(&ride_array, 0, sizeof(ride_array));
-			memset(&display_ride_array, 0, sizeof(display_ride_array));
 			memset(&incline_queue, 0, sizeof(incline_queue));
+			memset(&ride_array, 0, sizeof(ride_array));
+			memset(&current_inclines, 0, sizeof(current_inclines));
+
 			queue_head = 0;
 			queue_count = 0;
 			ride_array_count = 0;
 			temp_counter = 0;
 			insert_array_count = 0;
-			insert_array_interval = 5;
+			insert_array_interval = 1;
 			update_time = 50;
 
+			current_incline_index = 0;
 
 			QActive_postISR((QActive *)&AO_InclineDisplay, UPDATE_RIDE);
 			return Q_HANDLED();
@@ -194,19 +222,23 @@ QState InclineDisplay_on(InclineDisplay *me) {
 //			return Q_HANDLED();
 //		}
 		case ENCODER_DOWN: {
-			if (sensitivity_num > 1){
-				sensitivity_num -= 1;
-				sensitivity_alpha = sensitivity_lut[sensitivity_num -1 ];
+			if(filter_state == FILTER_ON){
+				if (sensitivity_num > 1){
+					sensitivity_num -= 1;
+					sensitivity_alpha = sensitivity_lut[sensitivity_num -1 ];
+				}
+				displayInclineSensitivity(sensitivity_num);
 			}
-			displayInclineSensitivity(sensitivity_num);
 			return Q_HANDLED();
 		}
 		case ENCODER_UP: {
-			if (sensitivity_num < SENSITIVITY_LUT_LENGTH){
-				sensitivity_num += 1;
-				sensitivity_alpha = sensitivity_lut[sensitivity_num - 1];
+			if(filter_state == FILTER_ON){
+				if (sensitivity_num < SENSITIVITY_LUT_LENGTH){
+					sensitivity_num += 1;
+					sensitivity_alpha = sensitivity_lut[sensitivity_num - 1];
+				}
+				displayInclineSensitivity(sensitivity_num);
 			}
-			displayInclineSensitivity(sensitivity_num);
 			return Q_HANDLED();
 		}
 		case TOGGLE_FILTER: {
@@ -235,7 +267,7 @@ QState InclineDisplay_on(InclineDisplay *me) {
 QState InclineDisplay_Home_View(InclineDisplay *me) {
 	switch (Q_SIG(me)) {
 		case Q_ENTRY_SIG: {
-			xil_printf("Entry: Home State\n");
+			xil_printf("\nEntry: Home State");
 			displayHomeBackground();
 			displayHomeIncline(cur_incline);
 			displayRideState(rideStateToString(ride_state));
@@ -266,10 +298,10 @@ QState InclineDisplay_Home_View(InclineDisplay *me) {
 QState InclineDisplay_Ride_View(InclineDisplay *me) {
 	switch (Q_SIG(me)) {
 		case Q_ENTRY_SIG: {
-			xil_printf("ENTRY: Ride State\n");
+			xil_printf("\nENTRY: Ride State");
 			displayRideBackground();
 			displayRideInfo(ride_info);
-			displayRideArrayPlot(display_ride_array, ride_info);
+			displayRideArrayPlotStart(display_ride_array, ride_info);
 			displayRideCurIncline(cur_incline);
 			displayRideState(rideStateToString(ride_state));
 			displayInclineSensitivity(sensitivity_num);
@@ -286,9 +318,13 @@ QState InclineDisplay_Ride_View(InclineDisplay *me) {
 		}
 		case UPDATE_RIDE: {
 			//xil_printf("\n\In Update Ride");
+			if(ride_state == RIDE_OFF){
+				displayRideArrayPlotStart(display_ride_array, ride_info);
+			}
+			else{
+				displayRideArrayPlot(display_ride_array, current_incline_index);
+			}
 
-			displayRideArrayPlot(display_ride_array, ride_info);
-			//displayRideInfo(ride_info);
 			updateRideInfo(ride_info);
 			displayRideCurIncline(cur_incline);
 			return Q_HANDLED();
@@ -297,7 +333,6 @@ QState InclineDisplay_Ride_View(InclineDisplay *me) {
 
 	return Q_SUPER(&InclineDisplay_on);
 }
-
 
 /* Helper Functions */
 /**********************************************************************/
@@ -336,11 +371,13 @@ void handle_get_incline(){
 
 
 
+
 	//If in a ride currently add the incline to ride
 	if (ride_state == RIDE_ON){
 		UpdateRideArray(cur_incline);
 		UpdateRideInfo(cur_incline);
 	}
+
 }
 
 
@@ -360,105 +397,59 @@ float calculate_average(float *array, int count) {
     return (count > 0) ? (sum / count) : 0;
 }
 
-// Main function to update ride array
+
+//float insert_current_array_interval
+int cur_interval = 1;
+int ride_interval = 1;
+//void UpdateRideArray(float incline) {
+//    temp_counter++;
+//
+//
+//    //Update Current Incline Plot
+//    if(current_incline_index == ARRAY_PLOT_LENGTH){
+//    	current_incline_index = 0;
+//    }
+//    current_inclines[current_incline_index] = incline;
+//    current_incline_index += 1;
+////
+////
+//    if (ride_state == RIDE_ON) {
+//        temp_counter = 0;
+//
+//
+//        for (int i = 0; i < ARRAY_PLOT_LENGTH; i++) {
+//        	int idx = current_incline_index + i;
+//        	if (idx >= ARRAY_PLOT_LENGTH){
+//        		idx = idx - ARRAY_PLOT_LENGTH;
+//        	}
+//        	//display_ride_array[i] = current_inclines[idx];
+//        	//display_ride_array[i] = current_inclines[i];
+//
+//		}
+////
+////        // Send update to UI (replace with actual function call)
+//        QActive_postISR((QActive *)&AO_InclineDisplay, UPDATE_RIDE);
+//    }
+//}
 void UpdateRideArray(float incline) {
     temp_counter++;
 
-    bool update_UI = (temp_counter > update_time);
+    // Update Current Incline Plot
 
-    if (insert_array_count < insert_array_interval) {
-        insert_array_count++;
-        enqueue(incline_queue, &queue_head, &queue_count, QUEUE_SIZE, incline);
-    } else {
-        insert_array_count = 0;
-        float new_incline = calculate_average(incline_queue, queue_count);
-        queue_count = 0; // Reset queue
+    if (ride_state == RIDE_ON) {
 
-        // Add to ride array
-        if (ride_array_count < RIDE_ARRAY_SIZE) {
-            ride_array[ride_array_count++] = new_incline;
-        }
+    	current_inclines[current_incline_index] = incline;
+        display_ride_array[current_incline_index] = incline;
 
-        // Check if ride_array needs downsampling
-        if (ride_array_count > 2 * ARRAY_PLOT_LENGTH) {
-            int step = ride_array_count / ARRAY_PLOT_LENGTH;
-            float new_ride_array[ARRAY_PLOT_LENGTH];
-            for (int i = 0, j = 0; j < ARRAY_PLOT_LENGTH; i += step, j++) {
-                new_ride_array[j] = calculate_average(&ride_array[i], step);
-            }
-            for (int i = 0; i < ARRAY_PLOT_LENGTH; i++) {
-                ride_array[i] = new_ride_array[i];
-            }
-            ride_array_count = ARRAY_PLOT_LENGTH;
-            insert_array_interval++;
-        }
-    }
-
-    if (update_UI) {
+    	current_incline_index = (current_incline_index + 1) % ARRAY_PLOT_LENGTH;
         temp_counter = 0;
-
-        // Update the display ride array logic
-        // Use only the last ARRAY_PLOT_LENGTH elements of ride_array
-        for (int i = 0; i < ARRAY_PLOT_LENGTH; i++) {
-            int idx = ride_array_count - ARRAY_PLOT_LENGTH + i;
-            display_ride_array[i] = (idx >= 0) ? ride_array[idx] : 0;
-        }
 
         // Send update to UI (replace with actual function call)
         QActive_postISR((QActive *)&AO_InclineDisplay, UPDATE_RIDE);
     }
 }
 
-/*
-int temp_counter = 0;
-int update_time = 10;
-void UpdateRideArray(float incline) {
-	//xil_printf("\nTODO: UpdateRideArray");
-	//xil_printf("\nTODO: UpdateRideArray");
-	temp_counter += 1;
-	int update_UI = temp_counter > update_time;
 
-	//If insert_array_count <= insert_array_interval
-		//insert_array_count += 1
-		//add incline to incline_queue
-
-	//else
-		//insert_array_count = 0
-		//new_incline = average of incline_queue
-
-		//add new_incline to ride_array
-
-		//if ride_array size > ARRAY_PLOT_LENGTH
-
-			//if ride_array size > x2 ARRAY_PLOT_LENGTH
-				//average all ride_array to size ARRAY_PLOT_LENGTH
-				//insert_array_interval += 1
-
-			//if update_ui
-				//set display_ride_array to the ARRAY_PLOT_LENGTH values at the end of the array
-
-		//else if ride_array size < ARRAY_PLOT_LENGTH
-
-			//mult = ARRAY_PLOT_LENGTH % ride_array_size + 1
-
-			//if update_ui
-				//for size of ride_array
-					//add ride_array to display_ride_array mult times until run out of space in display_ride_array (working backwards)
-
-		//Note** Make sure to convert floats to int
-
-	//If enough time has passed, to update ride UI
-	if(update_UI){
-		temp_counter = 0;
-
-		//Create display_ride_away with correct history of ride
-
-		//Send To Update UI
-		QActive_postISR((QActive *)&AO_InclineDisplay, UPDATE_RIDE);
-	}
-	return;
-}
-*/
 
 void UpdateRideInfo(float incline){
 	// Update the minimum incline
@@ -491,4 +482,108 @@ const char* rideStateToString(enum RideState state) {
             return "UNKNOWN";
     }
 }
+
+/*
+ * void UpdateRideArray(float incline) {
+    temp_counter++;
+
+    //bool update_UI = (temp_counter > update_time);
+    bool update_UI = 0 == 0;
+
+//    //Calculate and Store Entire Ride History
+//    if (insert_array_count < insert_array_interval) {
+//        insert_array_count++;
+//        enqueue(incline_queue, &queue_head, &queue_count, QUEUE_SIZE, incline);
+//    }
+//    if (insert_array_count >= insert_array_interval) {
+//
+//        insert_array_count = 0;
+//        float new_incline = calculate_average(incline_queue, queue_count);
+//        queue_count = 0; // Reset queue
+//
+//        // Add to ride array
+//        if (ride_array_count < RIDE_ARRAY_SIZE) {
+//            ride_array[ride_array_count++] = new_incline;
+//        }
+//
+//        // Check if ride_array needs downsampling
+//        if (ride_array_count == RIDE_ARRAY_SIZE) {
+//            int step = 2;
+//            float new_ride_array[ARRAY_PLOT_LENGTH];
+//            for (int i = 0, j = 0; j < ARRAY_PLOT_LENGTH; i += step, j++) {
+//                new_ride_array[j] = calculate_average(&ride_array[i], step);
+//            }
+//            for (int i = 0; i < ARRAY_PLOT_LENGTH; i++) {
+//                //ride_array[i] = new_ride_array[i];
+//            	//Save Ride for History
+//            	ride_array[i] = new_ride_array[i];
+//            }
+//            ride_array_count = ARRAY_PLOT_LENGTH;
+//            insert_array_interval *= 2;
+//            ride_info.insert_array_interval = insert_array_interval;
+//        }
+//    }
+
+//    if (ride_array_count < RIDE_ARRAY_SIZE) {
+//		ride_array[ride_array_count++] = new_incline;
+//	}
+//
+//	// Check if ride_array needs downsampling
+//	if (ride_array_count == RIDE_ARRAY_SIZE) {
+//		//Average New Values
+//		for (int i = 0, j = 0; j < ARRAY_PLOT_LENGTH; i += step, j++) {
+//			ride_array[j] = calculate_average(&ride_array[i], step);
+//		}
+//
+//
+//		ride_array_count = ARRAY_PLOT_LENGTH;
+//	}
+
+    //Update Current Incline Plot
+    if(current_incline_index == ARRAY_PLOT_LENGTH){
+    	current_incline_index = 0;
+    }
+    current_inclines[current_incline_index] = incline;
+    current_incline_index += 1;
+
+
+    if (update_UI && ride_state == RIDE_ON) {
+        temp_counter = 0;
+
+
+        // Update the display ride array logic
+        // Use only the last ARRAY_PLOT_LENGTH elements of ride_array
+        /*
+		if(ride_array_count < ARRAY_PLOT_LENGTH){
+			//ARRAY Lenght 180, points count 25, mult 9
+			int mult = ARRAY_PLOT_LENGTH % ride_array_count + 1;
+			int idx = 0;
+			int mult_counter = 0;
+			for (int i = ARRAY_PLOT_LENGTH; i > 0; i--) {
+				mult_counter ++;
+				display_ride_array[i] = ride_array[(-1) * idx];
+				if (mult_counter > mult){
+					idx += 1;
+					mult_counter = 0;
+				}
+			}
+		} else {
+
+		//for (int i = 0; i < ARRAY_PLOT_LENGTH; i++) {
+		//	int idx = ride_array_count - ARRAY_PLOT_LENGTH + i;
+		//	display_ride_array[i] = (idx >= 0) ? ride_array[idx] : 0;
+		//}
+        for (int i = 0; i < ARRAY_PLOT_LENGTH; i++) {
+        	int idx = current_incline_index + i;
+        	if (idx >= ARRAY_PLOT_LENGTH){
+        		idx = idx - ARRAY_PLOT_LENGTH;
+        	}
+        	display_ride_array[i] = current_inclines[idx];
+		}
+
+        // Send update to UI (replace with actual function call)
+        QActive_postISR((QActive *)&AO_InclineDisplay, UPDATE_RIDE);
+    }
+}
+*/
 

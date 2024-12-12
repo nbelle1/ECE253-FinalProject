@@ -119,8 +119,8 @@ void decreaseVolume(int volume);
 
 
 //Incline Display Functions
-#define ARRAY_PLOT_LENGTH 64
-#define ARRAY_PLOT_POINT_WIDTH 2
+#define ARRAY_PLOT_LENGTH 200
+#define ARRAY_PLOT_POINT_WIDTH 1
 
 void displayHomeBackground();
 void displayHomeIncline(float incline);
@@ -130,7 +130,9 @@ void displayInclineSlopeStart(float incline);
 void displayRideBackground();
 void displayRideInfo(RideInfo ride_info);
 void updateRideInfo(RideInfo ride_info);
-void displayRideArrayPlot(float ride_array[ARRAY_PLOT_LENGTH], RideInfo ride_info);
+void displayRideArrayPlot(float ride_array[ARRAY_PLOT_LENGTH], int current_incline_index);
+void displayRideArrayPlotStart(float ride_array[ARRAY_PLOT_LENGTH], RideInfo ride_info);
+
 void displayRideCurIncline(float incline);
 
 

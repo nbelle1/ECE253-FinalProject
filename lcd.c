@@ -606,17 +606,18 @@ void updateRideInfo(RideInfo ride_info) {
 
 
 
-
-void displayRideArrayPlot(float ride_array[ARRAY_PLOT_LENGTH], RideInfo ride_info){
+float prev_ride_array[ARRAY_PLOT_LENGTH];
+void displayRideArrayPlotStart(float ride_array[ARRAY_PLOT_LENGTH], RideInfo ride_info){
+	//xil_printf("\n\displayRideArrayStart\n");
 
 	//Make a box that represetnts the ride_info.averge_incline in bounds 20,200,DISP_X_SIZE-20,DISP_Y_SIZE-20
-	//int offset = 50;
-	int x_min = 50;
+	int x_min = 20;
 	int x_max = x_min + (ARRAY_PLOT_LENGTH * ARRAY_PLOT_POINT_WIDTH);
-	int y_min = 200;
-	int y_max = DISP_Y_SIZE - 20;
-	int y_mid = (y_max + y_min) / 2;
 	float mult = 0.5;
+	int y_min = 200;
+	int y_mid = y_min + mult * 90;
+	int y_max = y_min + 2 * mult * 90;
+
 
     setColor(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b);
 	fillRect(x_min, y_min, x_max, y_max);
@@ -635,22 +636,68 @@ void displayRideArrayPlot(float ride_array[ARRAY_PLOT_LENGTH], RideInfo ride_inf
 		int y2 = -1 * (int)y_val + y_mid;
 
 		fillRect(x1, y_mid, x2, y2);
+
+		//Update Previous Array
+		prev_ride_array[i] = ride_array[i];
 	}
 
 	//fillRect(20,200,DISP_X_SIZE-20,DISP_Y_SIZE-20);
 	return;
 }
 
-void clearRideArrayPlot(){
-	int x_min = 50;
+void displayRideArrayPlot(float ride_array[ARRAY_PLOT_LENGTH], int current_incline_index){
+
+	//Make a box that represetnts the ride_info.averge_incline in bounds 20,200,DISP_X_SIZE-20,DISP_Y_SIZE-20
+	int x_min = 20;
 	int x_max = x_min + (ARRAY_PLOT_LENGTH * ARRAY_PLOT_POINT_WIDTH);
-	int y_min = 200;
-	int y_max = DISP_Y_SIZE - 20;
-	int y_mid = (y_max + y_min) / 2;
 	float mult = 0.5;
-	setColor(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b);
-	fillRect(x_min, y_min, x_max, y_max);
+	int y_min = 200;
+	int y_mid = y_min + mult * 90;
+	int y_max = y_min + 2 * mult * 90;
+
+
+    //setColor(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b);
+	//fillRect(x_min, y_min, x_max, y_max);
+
+
+	for(int i = 0; i < ARRAY_PLOT_LENGTH; i++){
+	    int idx = (current_incline_index + i) % ARRAY_PLOT_LENGTH;
+
+		float y_val = ride_array[idx] * mult;
+		float prev_y_val = prev_ride_array[i] * mult;
+		float y_dif = prev_y_val - y_val;
+		if(y_val > 0){
+			if(y_dif > 0){
+				setColor(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b);
+			}
+			else{
+				setColor(175,0,0);
+			}
+		}
+		else {
+			if(y_dif < 0){
+				setColor(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b);
+			}
+			else{
+				setColor(0,175,0);
+			}
+		}
+		int x1 = x_min + (i * ARRAY_PLOT_POINT_WIDTH);
+		int x2 = x1 + ARRAY_PLOT_POINT_WIDTH;
+		int y2 = -1 * (int)y_val + y_mid;
+		int y1 = -1 * (int)prev_y_val + y_mid;
+
+		fillRect(x1, y1, x2, y2);
+		prev_ride_array[i] = ride_array[idx];
+
+	}
+
+
+	//fillRect(20,200,DISP_X_SIZE-20,DISP_Y_SIZE-20);
+	return;
 }
+
+
 void displayRideCurIncline(float incline){
 
 	// Convert float to string
