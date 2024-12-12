@@ -357,7 +357,7 @@ void UpdateRideArray(float incline) {
         }
 
         // Check if ride_array needs downsampling
-        if (ride_array_count > 2 * ARRAY_PLOT_LENGTH) {
+        if (ride_array_count == RIDE_ARRAY_SIZE) {
             int step = ride_array_count / ARRAY_PLOT_LENGTH;
             float new_ride_array[ARRAY_PLOT_LENGTH];
             for (int i = 0, j = 0; j < ARRAY_PLOT_LENGTH; i += step, j++) {
@@ -376,11 +376,25 @@ void UpdateRideArray(float incline) {
 
         // Update the display ride array logic
         // Use only the last ARRAY_PLOT_LENGTH elements of ride_array
-        for (int i = 0; i < ARRAY_PLOT_LENGTH; i++) {
-            int idx = ride_array_count - ARRAY_PLOT_LENGTH + i;
-            display_ride_array[i] = (idx >= 0) ? ride_array[idx] : 0;
-        }
-
+		if(ride_array_count < ARRAY_PLOT_LENGTH){
+			//ARRAY Lenght 180, points count 25, mult 9
+			int mult = ARRAY_PLOT_LENGTH % ride_array_count + 1;
+			int idx = 0;
+			int mult_counter = 0;
+			for (int i = ARRAY_PLOT_LENGTH; i > 0; i--) {
+				mult_counter ++;
+				display_ride_array[i] = ride_array[(-1) * idx];
+				if (mult_counter > mult){
+					idx += 1;
+					mult_counter = 0;
+				}
+			}
+		} else {
+			for (int i = 0; i < ARRAY_PLOT_LENGTH; i++) {
+				int idx = ride_array_count - ARRAY_PLOT_LENGTH + i;
+				display_ride_array[i] = (idx >= 0) ? ride_array[idx] : 0;
+			}
+		}
         // Send update to UI (replace with actual function call)
         QActive_postISR((QActive *)&AO_InclineDisplay, UPDATE_RIDE);
     }
