@@ -671,45 +671,41 @@ void displayRideArrayPlot(float ride_array[ARRAY_PLOT_LENGTH], int current_incli
         int y2 = -1 * (int)y_val + y_mid;
         int y1 = -1 * (int)prev_y_val + y_mid;
 
-        // Case to check if y1 and y2 cross the middle
-        if ((y1 > y_mid && y2 <= y_mid) || (y1 <= y_mid && y2 > y_mid)) {
-            // Calculate the crossing point
-            int y_cross = y_mid;
 
-            // Fill the upper rectangle
-            if (y1 > y_cross) {
-                setColor(175, 0, 0); // Red
-                fillRect(x1, y1, x2, y_cross);
-            } else {
-                setColor(0, 175, 0); // Green
-                fillRect(x1, y1, x2, y_cross);
-            }
+		// Single rectangle logic
+		if (y_val > 0) {
 
-            // Fill the lower rectangle
-            if (y2 > y_cross) {
-                setColor(175, 0, 0); // Red
-                fillRect(x1, y_cross, x2, y2);
-            } else {
-                setColor(0, 175, 0); // Green
-                fillRect(x1, y_cross, x2, y2);
-            }
-        } else {
-            // Single rectangle logic
-            if (y_val > 0) {
-                if (prev_y_val - y_val > 0) {
-                    setColor(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b);
-                } else {
-                    setColor(175, 0, 0); // Red
-                }
-            } else {
-                if (prev_y_val - y_val < 0) {
-                    setColor(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b);
-                } else {
-                    setColor(0, 175, 0); // Green
-                }
-            }
-            fillRect(x1, y1, x2, y2);
-        }
+			//Adjust for crossover and draw top rectangle
+			if(prev_y_val  < 0) {
+				xil_printf("Top CrossOver");
+				setColor(0, 175, 0); // Green
+				fillRect(x1, y1, x2, y_mid);
+				//Reset y_1
+				y1 = y_mid;
+			}
+
+			if (prev_y_val - y_val > 0) {
+				setColor(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b);
+			} else {
+				setColor(175, 0, 0); // Red
+			}
+
+		} else {
+			if(prev_y_val  < 0) {
+				xil_printf("Buttom CrossOver");
+				setColor(175, 0, 0); // Red
+				fillRect(x1, y1, x2, y_mid);
+				//Reset y_1
+				y1 = y_mid;
+			}
+
+			if (prev_y_val - y_val < 0) {
+				setColor(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b);
+			} else {
+				setColor(0, 175, 0); // Green
+			}
+		}
+		fillRect(x1, y1, x2, y2);
 
 		prev_ride_array[i] = ride_array[idx];
 
