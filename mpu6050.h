@@ -46,6 +46,7 @@ int mpu_deinit();
 mpu_data_t get_mpu_data();
 int mpu_data_read_test();
 float computeIncline(mpu_data_t mpu_data, float dt);
+float computeUnfilteredIncline(mpu_data_t data);
 double Kalman_getAngle(Kalman_t *Kalman, double newAngle, double newRate, float dt);
 
 

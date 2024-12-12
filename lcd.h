@@ -137,5 +137,6 @@ void displayRideCurIncline(float incline);
 
 void displayRideState(char *st);
 void displayInclineSensitivity(int num);
+void displayUnfiltered();
 
 #endif /* LCD_H_ */

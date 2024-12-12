@@ -285,6 +285,13 @@ float computeIncline(mpu_data_t data, float dt)
 	//return data.accel_x;
 }
 
+float computeUnfilteredIncline(mpu_data_t data){
+	double pitch = atan2(-data.accel_x, data.accel_z) * RAD_TO_DEG;
+
+	//mpu6050_interface_debug_print("\n[DEBUG] Computed Pitch: %.3f degrees\r\n", pitch);
+	return (float)pitch;
+}
+
 double Kalman_getAngle(Kalman_t *Kalman, double newAngle, double newRate, float dt)
 {
 	//mpu6050_interface_debug_print("\n[DEBUG] Kalman Filter Input:\r\n");

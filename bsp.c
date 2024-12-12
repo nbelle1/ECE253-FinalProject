@@ -292,7 +292,7 @@ void encoder_handler(void *CallbackRef){
 	if(cur_pin == BUTTON_DOWN){
 		//Send Encoder Down Signal
 		//xil_printf("Encoder Click Signal\n");
-    	QActive_postISR((QActive *)&AO_InclineDisplay, TOGGLE_VIEW);
+    	QActive_postISR((QActive *)&AO_InclineDisplay, TOGGLE_FILTER);
 
 		//Time Based De-bouncing
 		usleep(200000);

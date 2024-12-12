@@ -337,8 +337,8 @@ void displayInclineSlopeStart(float incline) {
 	// Draw a series of vertical rectangles to represent the incline within a box
 
 	int x_start = 20;
-	int y_start = 200;
-	int box_width = 90; // Width of the box
+	int y_start = 205;
+	int box_width = 100; // Width of the box
 	int box_height = 90; // Height of the box
 	int rect_width = 1;
 	int num_rects = box_width / rect_width; // Number of rectangles based on box width
@@ -377,8 +377,8 @@ void displayInclineSlope(float incline) {
 	// Draw a series of vertical rectangles to represent the incline within a box
 
 	int x_start = 20;
-	int y_start = 200;
-	int box_width = 90; // Width of the box
+	int y_start = 205;
+	int box_width = 100; // Width of the box
 	int box_height = 90; // Height of the box
 	int rect_width = 1;
 	int offset = 200;
@@ -668,7 +668,7 @@ void displayRideCurIncline(float incline){
 	//Print Font
 	setColor(0,0,0);
 	setFont(BigFont);
-	lcdPrint(st,60,50);
+	lcdPrint(st,60,55);
 
 	return;
 }
@@ -686,6 +686,16 @@ void displayRideState(char *st){
 	char buffer[32]; // Temporary buffer for combining strings
 	sprintf(buffer, "Ride: %5s", st); // Format the string
 	lcdPrint(buffer, 10, 22); // Pass the formatted string to lcdPrint
+	return;
+}
+
+void displayUnfiltered(){
+	setColor(0, 0, 0);
+	setFont(SmallFont);
+
+	char buffer[32]; // Temporary buffer for combining strings
+	sprintf(buffer, "NO FILTER"); // Format the string
+	lcdPrint(buffer, 10, 10); // Pass the formatted string to lcdPrint
 	return;
 }
 

@@ -19,6 +19,7 @@ enum InclineDisplaySignals {
 	UPDATE_RIDE,
 	ENCODER_DOWN,
 	ENCODER_UP,
+	TOGGLE_FILTER,
 	
 };
 
@@ -26,6 +27,11 @@ enum RideState {
 	RIDE_OFF,
 	RIDE_ON,
 	RIDE_PAUSE,
+};
+
+enum FilterState {
+	FILTER_ON,
+	FILTER_OFF,
 };
 
 typedef struct {

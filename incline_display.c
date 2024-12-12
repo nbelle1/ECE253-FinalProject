@@ -27,6 +27,9 @@ extern XTmrCtr timer;
 enum RideState ride_state;
 RideInfo ride_info;
 
+//Filter Variables
+enum FilterState filter_state;
+
 // Used To update Ride Plot with Ride Array
 #define QUEUE_SIZE 20
 #define RIDE_ARRAY_SIZE 2 * ARRAY_PLOT_LENGTH
@@ -41,7 +44,7 @@ float display_ride_array[ARRAY_PLOT_LENGTH];
 //Encoder Sensitivity Control
 #define SENSITIVITY_LUT_LENGTH 6
 int sensitivity_num = 3;
-float sensitivity_alpha = 1.0f;
+float sensitivity_alpha;
 float sensitivity_lut[SENSITIVITY_LUT_LENGTH] = {
 	0.0005f,
 	0.005f,
@@ -83,7 +86,9 @@ void InclineDisplay_ctor(void)  {
 
 	//Initialize Variables
 	ride_state = RIDE_OFF;
+	filter_state = FILTER_ON;
 	cur_incline = 0.0;
+	sensitivity_alpha = sensitivity_lut[sensitivity_num -1];
 
 	xil_printf("\nVariables Initialized");
 
@@ -204,6 +209,17 @@ QState InclineDisplay_on(InclineDisplay *me) {
 			displayInclineSensitivity(sensitivity_num);
 			return Q_HANDLED();
 		}
+		case TOGGLE_FILTER: {
+			if (filter_state == FILTER_ON){
+				filter_state = FILTER_OFF;
+				displayUnfiltered();
+			}
+			else{
+				filter_state = FILTER_ON;
+				displayInclineSensitivity(sensitivity_num);
+			}
+			return Q_HANDLED();
+		}
 		case Q_INIT_SIG: {
 			return Q_TRAN(&InclineDisplay_Home_View);
 		}
@@ -301,17 +317,24 @@ void handle_get_incline(){
 
 	//Get and compute the incline from the MPU
 	mpu_data_raw = get_mpu_data();
-	float raw_incline = computeIncline(mpu_data_raw, dt);
 
-	if(raw_incline > INCLINE_MAX){
-		raw_incline = INCLINE_MAX;
+	if(filter_state == FILTER_ON){
+		float raw_incline = computeIncline(mpu_data_raw, dt);
+		// Calculate smoothed incline
+		cur_incline = sensitivity_alpha * raw_incline + (1 - sensitivity_alpha) * cur_incline;
 	}
-	else if(raw_incline < INCLINE_MIN){
-		raw_incline = INCLINE_MIN;
+	else{
+		cur_incline = computeUnfilteredIncline(mpu_data_raw);
 	}
 
-	// Calculate smoothed incline
-	cur_incline = sensitivity_alpha * raw_incline + (1 - sensitivity_alpha) * cur_incline;
+	if(cur_incline > INCLINE_MAX){
+		cur_incline = INCLINE_MAX;
+	}
+	else if(cur_incline < INCLINE_MIN){
+		cur_incline = INCLINE_MIN;
+	}
+
+
 
 	//If in a ride currently add the incline to ride
 	if (ride_state == RIDE_ON){
