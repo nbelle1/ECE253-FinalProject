@@ -660,34 +660,57 @@ void displayRideArrayPlot(float ride_array[ARRAY_PLOT_LENGTH], int current_incli
 	//fillRect(x_min, y_min, x_max, y_max);
 
 
-	for(int i = 0; i < ARRAY_PLOT_LENGTH; i++){
-	    int idx = (current_incline_index + i) % ARRAY_PLOT_LENGTH;
+	for (int i = 0; i < ARRAY_PLOT_LENGTH; i++) {
+        int idx = (current_incline_index + i) % ARRAY_PLOT_LENGTH;
 
-		float y_val = ride_array[idx] * mult;
-		float prev_y_val = prev_ride_array[i] * mult;
-		float y_dif = prev_y_val - y_val;
-		if(y_val > 0){
-			if(y_dif > 0){
-				setColor(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b);
-			}
-			else{
-				setColor(175,0,0);
-			}
-		}
-		else {
-			if(y_dif < 0){
-				setColor(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b);
-			}
-			else{
-				setColor(0,175,0);
-			}
-		}
-		int x1 = x_min + (i * ARRAY_PLOT_POINT_WIDTH);
-		int x2 = x1 + ARRAY_PLOT_POINT_WIDTH;
-		int y2 = -1 * (int)y_val + y_mid;
-		int y1 = -1 * (int)prev_y_val + y_mid;
+        float y_val = ride_array[idx] * mult;
+        float prev_y_val = prev_ride_array[i] * mult;
 
-		fillRect(x1, y1, x2, y2);
+        int x1 = x_min + (i * ARRAY_PLOT_POINT_WIDTH);
+        int x2 = x1 + ARRAY_PLOT_POINT_WIDTH;
+        int y2 = -1 * (int)y_val + y_mid;
+        int y1 = -1 * (int)prev_y_val + y_mid;
+
+        // Case to check if y1 and y2 cross the middle
+        if ((y1 > y_mid && y2 <= y_mid) || (y1 <= y_mid && y2 > y_mid)) {
+            // Calculate the crossing point
+            int y_cross = y_mid;
+
+            // Fill the upper rectangle
+            if (y1 > y_cross) {
+                setColor(175, 0, 0); // Red
+                fillRect(x1, y1, x2, y_cross);
+            } else {
+                setColor(0, 175, 0); // Green
+                fillRect(x1, y1, x2, y_cross);
+            }
+
+            // Fill the lower rectangle
+            if (y2 > y_cross) {
+                setColor(175, 0, 0); // Red
+                fillRect(x1, y_cross, x2, y2);
+            } else {
+                setColor(0, 175, 0); // Green
+                fillRect(x1, y_cross, x2, y2);
+            }
+        } else {
+            // Single rectangle logic
+            if (y_val > 0) {
+                if (prev_y_val - y_val > 0) {
+                    setColor(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b);
+                } else {
+                    setColor(175, 0, 0); // Red
+                }
+            } else {
+                if (prev_y_val - y_val < 0) {
+                    setColor(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b);
+                } else {
+                    setColor(0, 175, 0); // Green
+                }
+            }
+            fillRect(x1, y1, x2, y2);
+        }
+
 		prev_ride_array[i] = ride_array[idx];
 
 	}
