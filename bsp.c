@@ -283,19 +283,36 @@ enum STATE {
 	S5_CCW_3,
 	S6_CW_3,
 };
+
+uint32_t last_encoder_time = 0; // Store last debounce time in timer ticks
 void encoder_handler(void *CallbackRef){
 	//xil_printf("Encoder Trigger\n");
 	XGpio *GpioPtr = (XGpio *)CallbackRef;
 	int cur_pin = XGpio_DiscreteRead(&EncoderGpio, 1);
 	sleep_count = 0;
 
+
+
 	if(cur_pin == BUTTON_DOWN){
 		//Send Encoder Down Signal
 		//xil_printf("Encoder Click Signal\n");
+
+		// Read the current timer value
+		uint32_t current_time = XTmrCtr_GetValue(&timer, 0);
+
+		// Check if the debounce period has elapsed (200 ms in ticks)
+		if ((current_time - last_encoder_time) < (XPAR_AXI_TIMER_1_CLOCK_FREQ_HZ / 5)) { // 200 ms debounce
+			XGpio_InterruptClear(GpioPtr, 1);
+			return;
+		}
+
+		// Update the last interrupt time
+		last_encoder_time = current_time;
+
     	QActive_postISR((QActive *)&AO_InclineDisplay, TOGGLE_FILTER);
 
 		//Time Based De-bouncing
-		usleep(200000);
+		//usleep(200000);
 		//reset_pin();
 		//continue;
 	}
@@ -359,6 +376,19 @@ void encoder_handler(void *CallbackRef){
 					case P1HIGH_P2HIGH:
 						//Update LED CCW
 						//xil_printf("Encoder Down Signal\n");
+
+						// Read the current timer value
+						uint32_t current_time = XTmrCtr_GetValue(&timer, 0);
+
+						// Check if the debounce period has elapsed (200 ms in ticks)
+						if ((current_time - last_encoder_time) < (XPAR_AXI_TIMER_1_CLOCK_FREQ_HZ / 5)) { // 200 ms debounce
+							XGpio_InterruptClear(GpioPtr, 1);
+							return;
+						}
+
+						// Update the last interrupt time
+						last_encoder_time = current_time;
+
 						QActive_postISR((QActive *)&AO_InclineDisplay, ENCODER_DOWN);
 
 						//current_position = led_left(current_position);
@@ -374,6 +404,20 @@ void encoder_handler(void *CallbackRef){
 					case P1HIGH_P2HIGH:
 						//Update LED CW
 						//xil_printf("Encoder Right Signal\n");
+
+						// Read the current timer value
+						uint32_t current_time = XTmrCtr_GetValue(&timer, 0);
+
+						// Check if the debounce period has elapsed (200 ms in ticks)
+						if ((current_time - last_encoder_time) < (XPAR_AXI_TIMER_1_CLOCK_FREQ_HZ / 5)) { // 200 ms debounce
+							XGpio_InterruptClear(GpioPtr, 1);
+							return;
+						}
+
+						// Update the last interrupt time
+						last_encoder_time = current_time;
+
+
 						QActive_postISR((QActive *)&AO_InclineDisplay, ENCODER_UP);
 
 						current_encoder_state = S0_START;
@@ -400,7 +444,7 @@ void button_handler(void *CallbackRef){
 	uint32_t current_time = XTmrCtr_GetValue(&timer, 0);
 
 	// Check if the debounce period has elapsed (200 ms in ticks)
-	if ((current_time - last_interrupt_time) < (XPAR_AXI_TIMER_1_CLOCK_FREQ_HZ / 2)) { // 200 ms debounce
+	if ((current_time - last_interrupt_time) < (XPAR_AXI_TIMER_1_CLOCK_FREQ_HZ / 5)) { // 200 ms debounce
 		XGpio_InterruptClear(GpioPtr, 1);
 		return;
 	}

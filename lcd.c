@@ -314,9 +314,9 @@ void displayHomeIncline(float incline){
 
 	// Format the string to align the tenths place
 	if (roundedIncline >= 0) {
-		sprintf(st, "%6.1f", roundedIncline); // Align with 6 characters, space for positive numbers
+		sprintf(st, "%6.1f!", roundedIncline); // Align with 6 characters, space for positive numbers
 	} else {
-		sprintf(st, "%6.1f", roundedIncline); // Align negative numbers similarly
+		sprintf(st, "%6.1f!", roundedIncline); // Align negative numbers similarly
 	}
 
 	//Print Font
@@ -472,32 +472,32 @@ void displayRideInfo(RideInfo ride_info) {
     // Print minimum incline
     sprintf(buffer, "Min Incline:");
     lcdPrint(buffer, text_start_x, text_start_y); // Label
-    sprintf(buffer, "%6.1f", ((int)(ride_info.min_incline * 10 + (ride_info.min_incline >= 0 ? 0.5 : -0.5))) / 10.0);
+    sprintf(buffer, "%6.1f!", ((int)(ride_info.min_incline * 10 + (ride_info.min_incline >= 0 ? 0.5 : -0.5))) / 10.0);
     lcdPrint(buffer, text_start_x + 120, text_start_y); // Value aligned
 
     // Print maximum incline
     sprintf(buffer, "Max Incline:");
     lcdPrint(buffer, text_start_x, text_start_y + line_spacing); // Label
-    sprintf(buffer, "%6.1f", ((int)(ride_info.max_incline * 10 + (ride_info.max_incline >= 0 ? 0.5 : -0.5))) / 10.0);
+    sprintf(buffer, "%6.1f!", ((int)(ride_info.max_incline * 10 + (ride_info.max_incline >= 0 ? 0.5 : -0.5))) / 10.0);
     lcdPrint(buffer, text_start_x + 120, text_start_y + line_spacing); // Value aligned
 
     // Print average incline
     sprintf(buffer, "Avg Incline:");
     lcdPrint(buffer, text_start_x, text_start_y + 2 * line_spacing); // Label
-    sprintf(buffer, "%6.1f", ((int)(ride_info.average_incline * 10 + (ride_info.average_incline >= 0 ? 0.5 : -0.5))) / 10.0);
+    sprintf(buffer, "%6.1f!", ((int)(ride_info.average_incline * 10 + (ride_info.average_incline >= 0 ? 0.5 : -0.5))) / 10.0);
     lcdPrint(buffer, text_start_x + 120, text_start_y + 2 * line_spacing); // Value aligned
 
     // Print insert array count
-    sprintf(buffer, "Time Elapsed:");
+    sprintf(buffer, "Total Reads:");
     lcdPrint(buffer, text_start_x, text_start_y + 3 * line_spacing); // Label
     sprintf(buffer, "%6d", ride_info.insert_array_count); // Fixed-width integer formatting
     lcdPrint(buffer, text_start_x + 120, text_start_y + 3 * line_spacing); // Value aligned
 
     // Print insert array interval
-    sprintf(buffer, "Array Interval:");
-    lcdPrint(buffer, text_start_x, text_start_y + 4 * line_spacing); // Label
-    sprintf(buffer, "%6d", ride_info.insert_array_interval); // Fixed-width integer formatting
-    lcdPrint(buffer, text_start_x + 120, text_start_y + 4 * line_spacing); // Value aligned
+//    sprintf(buffer, "Array Interval:");
+//    lcdPrint(buffer, text_start_x, text_start_y + 4 * line_spacing); // Label
+//    sprintf(buffer, "%6d", ride_info.insert_array_interval); // Fixed-width integer formatting
+//    lcdPrint(buffer, text_start_x + 120, text_start_y + 4 * line_spacing); // Value aligned
 
     return;
 }
@@ -509,15 +509,15 @@ void updateRideInfo(RideInfo ride_info) {
 
 
     // Update minimum incline value
-    sprintf(buffer, "%6.1f", ((int)(ride_info.min_incline * 10 + (ride_info.min_incline >= 0 ? 0.5 : -0.5))) / 10.0);
+    sprintf(buffer, "%6.1f!", ((int)(ride_info.min_incline * 10 + (ride_info.min_incline >= 0 ? 0.5 : -0.5))) / 10.0);
     lcdPrint(buffer, text_start_x + 120, 90); // Value aligned
 
     // Update maximum incline value
-    sprintf(buffer, "%6.1f", ((int)(ride_info.max_incline * 10 + (ride_info.max_incline >= 0 ? 0.5 : -0.5))) / 10.0);
+    sprintf(buffer, "%6.1f!", ((int)(ride_info.max_incline * 10 + (ride_info.max_incline >= 0 ? 0.5 : -0.5))) / 10.0);
     lcdPrint(buffer, text_start_x + 120, 110); // Value aligned
 
     // Update average incline value
-    sprintf(buffer, "%6.1f", ((int)(ride_info.average_incline * 10 + (ride_info.average_incline >= 0 ? 0.5 : -0.5))) / 10.0);
+    sprintf(buffer, "%6.1f!", ((int)(ride_info.average_incline * 10 + (ride_info.average_incline >= 0 ? 0.5 : -0.5))) / 10.0);
     lcdPrint(buffer, text_start_x + 120, 130); // Value aligned
 
     // Update array count value
@@ -525,8 +525,8 @@ void updateRideInfo(RideInfo ride_info) {
     lcdPrint(buffer, text_start_x + 120, 150); // Value aligned
 
     // Update array interval value
-    sprintf(buffer, "%6d", ride_info.insert_array_interval); // Fixed-width integer formatting
-    lcdPrint(buffer, text_start_x + 120, 170); // Value aligned
+//    sprintf(buffer, "%6d", ride_info.insert_array_interval); // Fixed-width integer formatting
+//    lcdPrint(buffer, text_start_x + 120, 170); // Value aligned
 
     return;
 }
@@ -645,6 +645,156 @@ void displayRideArrayPlotStart(float ride_array[ARRAY_PLOT_LENGTH], RideInfo rid
 	return;
 }
 
+
+
+
+
+
+
+//#include <stdbool.h>
+//float last_incline = 0.0;
+//void displayRideArrayPlot(float ride_array[ARRAY_PLOT_LENGTH], int current_incline_index){
+//
+//	//Make a box that represetnts the ride_info.averge_incline in bounds 20,200,DISP_X_SIZE-20,DISP_Y_SIZE-20
+//	int x_min = 20;
+//	int x_max = x_min + (ARRAY_PLOT_LENGTH * ARRAY_PLOT_POINT_WIDTH);
+//	float mult = 0.5;
+//	int y_min = 200;
+//	int y_mid = y_min + mult * 90;
+//	int y_max = y_min + 2 * mult * 90;
+//
+//
+//    //setColor(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b);
+//	//fillRect(x_min, y_min, x_max, y_max);
+//
+//	//Handle Special Case With A CrossOver
+////	int cur_idx = (current_incline_index -1) % ARRAY_PLOT_LENGTH;
+////	float cur_incline = ride_array[cur_idx];
+////	float last_incline = ride_array[cur_idx-1];
+//	//mpu6050_interface_debug_print("\nStat Cur:%f, Last:%f\r\n", cur_incline, last_incline);
+//
+//
+//
+//	for(int i = 0; i < ARRAY_PLOT_LENGTH; i++){
+//	    int idx = (current_incline_index + i) % ARRAY_PLOT_LENGTH;
+//
+//		int y_val = (int)(ride_array[idx] * mult);
+//		int prev_y_val = (int)prev_ride_array[i] * mult;
+//    	//mpu6050_interface_debug_print("\y_val:%d, prev_y_val:%d\r\n", y_val, prev_y_val);
+//
+//		int y_dif = prev_y_val - y_val;
+//		//Set prev array
+//		int x1 = x_min + (i * ARRAY_PLOT_POINT_WIDTH);
+//		int x2 = x1 + ARRAY_PLOT_POINT_WIDTH;
+//		int y2 = -1 * (int)y_val + y_mid;
+//		int y1 = -1 * (int)prev_y_val + y_mid;
+//		prev_ride_array[i] = ride_array[idx];
+//
+//
+//		if(y_val > 0){
+//			if(y_val + y_dif > )
+//			if(y_dif > 0){
+//				setColor(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b);
+//			}
+//			else{
+//				setColor(175,0,0);
+//			}
+//
+//
+//		}
+//		else {
+//			if(y_dif < 0){
+//				setColor(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b);
+//			}
+//			else{
+//				setColor(0,175,0);
+//			}
+//		}
+//
+//		fillRect(x1, y1, x2, y2);
+//
+//	}
+//
+//
+//	//fillRect(20,200,DISP_X_SIZE-20,DISP_Y_SIZE-20);
+//	return;
+//}
+
+
+// Best One
+
+//void displayRideArrayPlot(float ride_array[ARRAY_PLOT_LENGTH], int current_incline_index){
+//
+//	//Make a box that represetnts the ride_info.averge_incline in bounds 20,200,DISP_X_SIZE-20,DISP_Y_SIZE-20
+//	int x_min = 20;
+//	int x_max = x_min + (ARRAY_PLOT_LENGTH * ARRAY_PLOT_POINT_WIDTH);
+//	float mult = 0.5;
+//	int y_min = 200;
+//	int y_mid = y_min + mult * 90;
+//	int y_max = y_min + 2 * mult * 90;
+//
+//
+//    //setColor(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b);
+//	//fillRect(x_min, y_min, x_max, y_max);
+//
+//
+//	for (int i = 0; i < ARRAY_PLOT_LENGTH; i++) {
+//        int idx = (current_incline_index + i) % ARRAY_PLOT_LENGTH;
+//
+//        float y_val = ride_array[idx] * mult;
+//        float prev_y_val = prev_ride_array[i] * mult;
+//
+//        int x1 = x_min + (i * ARRAY_PLOT_POINT_WIDTH);
+//        int x2 = x1 + ARRAY_PLOT_POINT_WIDTH;
+//        int y2 = -1 * (int)y_val + y_mid;
+//        int y1 = -1 * (int)prev_y_val + y_mid;
+//
+//
+//		// Single rectangle logic
+//		if (y_val > 0) {
+//
+//			//Adjust for crossover and draw top rectangle
+//			if(prev_y_val  < 0) {
+//				xil_printf("Top CrossOver");
+//				setColor(0, 175, 0); // Green
+//				fillRect(x1, y1, x2, y_mid);
+//				//Reset y_1
+//				y1 = y_mid;
+//			}
+//
+//			if (prev_y_val - y_val > 0) {
+//				setColor(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b);
+//			} else {
+//				setColor(175, 0, 0); // Red
+//			}
+//
+//		} else {
+//			if(prev_y_val  > 0) {
+//				xil_printf("Buttom CrossOver");
+//				setColor(175, 0, 0); // Red
+//				fillRect(x1, y1, x2, y_mid);
+//				//Reset y_1
+//				y1 = y_mid;
+//			}
+//
+//			if (prev_y_val - y_val < 0) {
+//				setColor(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b);
+//			} else {
+//				setColor(0, 175, 0); // Green
+//			}
+//		}
+//		fillRect(x1, y1, x2, y2);
+//
+//		prev_ride_array[i] = ride_array[idx];
+//
+//	}
+//
+//
+//	//fillRect(20,200,DISP_X_SIZE-20,DISP_Y_SIZE-20);
+//	return;
+//}
+
+
 void displayRideArrayPlot(float ride_array[ARRAY_PLOT_LENGTH], int current_incline_index){
 
 	//Make a box that represetnts the ride_info.averge_incline in bounds 20,200,DISP_X_SIZE-20,DISP_Y_SIZE-20
@@ -666,26 +816,80 @@ void displayRideArrayPlot(float ride_array[ARRAY_PLOT_LENGTH], int current_incli
 		float y_val = ride_array[idx] * mult;
 		float prev_y_val = prev_ride_array[i] * mult;
 		float y_dif = prev_y_val - y_val;
+		int crossover = 0;
+		int y1;
+
+		// New Incline is Positive: Draw Red above the Midpoint
 		if(y_val > 0){
+
+
+			// ADDED BY NB: Old Incline was Negative:
+			// If prev_y_val was negative
+			if(prev_y_val < 0){
+
+				//xil_printf("Bottom CrossOver");
+
+				crossover = 1;
+
+				// Draw background from y1 to mid
+				setColor(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b);
+				int x1 = x_min + (i * ARRAY_PLOT_POINT_WIDTH);
+				int x2 = x1 + ARRAY_PLOT_POINT_WIDTH;
+				y1 = -1 * (int)prev_y_val + y_mid;
+				fillRect(x1, y1, x2, y_mid);
+
+				// Set y1 to middle value to only draw new line to there
+				y1 = y_mid;
+
+			}
+
+			// New Incline is less than Previous Incline: Draw Background
 			if(y_dif > 0){
 				setColor(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b);
 			}
+
+			// New Incline is greater than or equal to Previous Incline: Draw Red
 			else{
 				setColor(175,0,0);
 			}
 		}
+
+		// New Incline is Negative/Zero: Draw Green below the Midpoint
 		else {
+
+			if(prev_y_val > 0){
+				//xil_printf("Bottom CrossOver");
+				crossover = 1;
+				setColor(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b);
+				int x1 = x_min + (i * ARRAY_PLOT_POINT_WIDTH);
+				int x2 = x1 + ARRAY_PLOT_POINT_WIDTH;
+				y1 = -1 * (int)prev_y_val + y_mid;
+				fillRect(x1, y1, x2, y_mid);
+				y1 = y_mid;
+
+			}
+
+			// New Incline is greater than Previous Incline: Draw Background
 			if(y_dif < 0){
 				setColor(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b);
 			}
+
+			// New incline is less than or equal to Previous Incline: Draw Green
 			else{
 				setColor(0,175,0);
 			}
 		}
+
 		int x1 = x_min + (i * ARRAY_PLOT_POINT_WIDTH);
 		int x2 = x1 + ARRAY_PLOT_POINT_WIDTH;
+		if(crossover != 1){
+			y1 = -1 * (int)prev_y_val + y_mid;
+			//xil_printf("y1: %d", y1);
+		}
+
+
 		int y2 = -1 * (int)y_val + y_mid;
-		int y1 = -1 * (int)prev_y_val + y_mid;
+
 
 		fillRect(x1, y1, x2, y2);
 		prev_ride_array[i] = ride_array[idx];
@@ -706,9 +910,9 @@ void displayRideCurIncline(float incline){
 
 	// Format the string to align the tenths place
 	if (roundedIncline >= 0) {
-		sprintf(st, "%6.1f", roundedIncline); // Align with 6 characters, space for positive numbers
+		sprintf(st, "%6.1f!", roundedIncline); // Align with 6 characters, space for positive numbers
 	} else {
-		sprintf(st, "%6.1f", roundedIncline); // Align negative numbers similarly
+		sprintf(st, "%6.1f!", roundedIncline); // Align negative numbers similarly
 	}
 
 
