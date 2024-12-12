@@ -124,12 +124,15 @@ void decreaseVolume(int volume);
 
 void displayHomeBackground();
 void displayHomeIncline(float incline);
+void displayInclineSlope(float incline);
+void displayInclineSlopeStart(float incline);
 
 void displayRideBackground();
 void displayRideInfo(RideInfo ride_info);
 void updateRideInfo(RideInfo ride_info);
 void displayRideArrayPlot(float ride_array[ARRAY_PLOT_LENGTH], RideInfo ride_info);
 void displayRideCurIncline(float incline);
+
 
 
 void displayRideState(char *st);

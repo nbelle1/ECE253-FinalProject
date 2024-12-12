@@ -107,11 +107,14 @@ QState InclineDisplay_initial(InclineDisplay *me) {
 QState InclineDisplay_on(InclineDisplay *me) {
 	switch (Q_SIG(me)) {
 		case Q_ENTRY_SIG: {
-			xil_printf("\n\rPlaceHolder");
+			xil_printf("\n\Display on");
+	        QActive_postISR((QActive *)&AO_InclineDisplay, UPDATE_INCLINE);
+
+
 			return Q_HANDLED();
 		}
 		case TOGGLE_RIDE: {
-			xil_printf("\n\rRAN TOGGLE");
+			//xil_printf("\n\rRAN TOGGLE");
 			if (ride_state == RIDE_ON){
 				ride_state = RIDE_PAUSE;
 			}
@@ -124,9 +127,24 @@ QState InclineDisplay_on(InclineDisplay *me) {
 		}
 		case RESET_RIDE: {
 			ride_state = RIDE_OFF;
-			// Clear all values to 0
 			displayRideState(rideStateToString(ride_state));
+
+			//Delete and Reset Current Ride information
 			memset(&ride_info, 0, sizeof(RideInfo));
+
+			//Reset Ride Plot Variables
+			memset(&ride_array, 0, sizeof(ride_array));
+			memset(&display_ride_array, 0, sizeof(display_ride_array));
+			memset(&incline_queue, 0, sizeof(incline_queue));
+			queue_head = 0;
+			queue_count = 0;
+			ride_array_count = 0;
+			temp_counter = 0;
+			insert_array_count = 0;
+			insert_array_interval = 5;
+			update_time = 50;
+
+
 			QActive_postISR((QActive *)&AO_InclineDisplay, UPDATE_RIDE);
 			return Q_HANDLED();
 		}
@@ -201,11 +219,15 @@ QState InclineDisplay_on(InclineDisplay *me) {
 QState InclineDisplay_Home_View(InclineDisplay *me) {
 	switch (Q_SIG(me)) {
 		case Q_ENTRY_SIG: {
-			xil_printf("ENTRY: Startup State Home\n");
+			xil_printf("Entry: Home State\n");
 			displayHomeBackground();
 			displayHomeIncline(cur_incline);
 			displayRideState(rideStateToString(ride_state));
 			displayInclineSensitivity(sensitivity_num);
+			displayInclineSlopeStart(cur_incline);
+
+			//NB testing incline display
+			//displayInclineSlope(cur_incline);
 			return Q_HANDLED();
 		}
 		case TOGGLE_VIEW: {
@@ -215,6 +237,9 @@ QState InclineDisplay_Home_View(InclineDisplay *me) {
 			//xil_printf("\n\IN UPDATE INCLINE");
 			handle_get_incline();
 			displayHomeIncline(cur_incline);
+			displayInclineSlope(cur_incline);
+	        QActive_postISR((QActive *)&AO_InclineDisplay, UPDATE_INCLINE);
+
 			return Q_HANDLED();
 		}
 	}
@@ -225,7 +250,7 @@ QState InclineDisplay_Home_View(InclineDisplay *me) {
 QState InclineDisplay_Ride_View(InclineDisplay *me) {
 	switch (Q_SIG(me)) {
 		case Q_ENTRY_SIG: {
-			xil_printf("ENTRY: Startup State Ride\n");
+			xil_printf("ENTRY: Ride State\n");
 			displayRideBackground();
 			displayRideInfo(ride_info);
 			displayRideArrayPlot(display_ride_array, ride_info);
@@ -240,6 +265,7 @@ QState InclineDisplay_Ride_View(InclineDisplay *me) {
 		case UPDATE_INCLINE: {
 			handle_get_incline();
 			displayRideCurIncline(cur_incline);
+	        QActive_postISR((QActive *)&AO_InclineDisplay, UPDATE_INCLINE);
 			return Q_HANDLED();
 		}
 		case UPDATE_RIDE: {
