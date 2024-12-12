@@ -252,7 +252,7 @@ void timer_handler() {
 	ControlStatusReg = XTimerCtr_ReadReg(sys_tmrctr.BaseAddress, 0, XTC_TCSR_OFFSET);
 
 
-	QActive_postISR((QActive *)&AO_InclineDisplay, UPDATE_INCLINE);
+	//QActive_postISR((QActive *)&AO_InclineDisplay, UPDATE_INCLINE);
 
 	/*
 	 * Acknowledge the interrupt by clearing the interrupt

@@ -322,7 +322,7 @@ void displayHomeIncline(float incline){
 	//Print Font
 	setColor(0,0,0);
 	setFont(BigFont);
-	lcdPrint(st,60,50);
+	lcdPrint(st,55,60);
 
 	//Print Current Incline
 	setColor(0,0,0);
@@ -331,6 +331,113 @@ void displayHomeIncline(float incline){
 	//Print Chart With Current Incline As Well
 	return;
 }
+
+float prev_incline = 0.0;
+void displayInclineSlopeStart(float incline) {
+	// Draw a series of vertical rectangles to represent the incline within a box
+
+	int x_start = 20;
+	int y_start = 200;
+	int box_width = 90; // Width of the box
+	int box_height = 90; // Height of the box
+	int rect_width = 1;
+	int num_rects = box_width / rect_width; // Number of rectangles based on box width
+	float slope = (incline / 90.0) * box_height; // Scaled slope based on incline
+
+	//setColor(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b);
+	//fillRect(x_start, y_start-box_height, x_start+box_width * 2, y_start + box_height);
+
+	setColor(0, 0, 0); // Black color for rectangles
+
+	for (int i = 0; i < num_rects; i++) {
+		int y_slope = (int)(i * slope / num_rects);
+
+		int x = x_start + (num_rects-i) * rect_width;
+		int y_rect_end = y_start + y_slope;
+
+		int offset = 200;
+
+		//Draw left triangles
+		setColor(offset-i*2, offset, 0);
+		fillRect(x, y_start+box_height, x + rect_width - 1, y_rect_end);
+
+		//Draw Right triangles
+		setColor(offset, offset-i*2, 0);
+		int x_r = x_start+box_width + i * rect_width;
+		int y_rect_end_r = y_start - y_slope;
+
+		fillRect(x_r, y_start+box_height, x_r + rect_width - 1, y_rect_end_r);
+
+	}
+	prev_incline = incline;
+	return;
+}
+
+void displayInclineSlope(float incline) {
+	// Draw a series of vertical rectangles to represent the incline within a box
+
+	int x_start = 20;
+	int y_start = 200;
+	int box_width = 90; // Width of the box
+	int box_height = 90; // Height of the box
+	int rect_width = 1;
+	int offset = 200;
+	int num_rects = box_width / rect_width; // Number of rectangles based on box width
+	float slope = (incline / 90.0) * box_height; // Scaled slope based on incline
+	float prev_slope = (prev_incline / 90.0) * box_height; // Scaled slope based on incline
+
+	//setColor(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b);
+	//fillRect(x_start, y_start-box_height, x_start+box_width * 2, y_start + box_height);
+
+	setColor(0, 0, 0); // Black color for rectangles
+
+	for (int i = 0; i < num_rects; i++) {
+		int y_slope = (int)(i * slope / num_rects);
+		int prev_y_slope = (int)(i * prev_slope / num_rects);
+
+		//Left Triangle Variables
+		int x = x_start + (num_rects-i) * rect_width;
+		int y_rect_end = y_start + y_slope;
+		int prev_y_rect_end = y_start + prev_y_slope;
+
+		//Right Triangle Variables
+		int x_r = x_start+box_width + i * rect_width;
+		int y_rect_end_r = y_start - y_slope;
+		int prev_y_rect_end_r = y_start - prev_y_slope;
+
+		if(y_slope > prev_y_slope){
+			setColor(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b);
+			//Draw left triangles
+			fillRect(x, prev_y_rect_end, x + rect_width - 1, y_rect_end);
+
+
+			//setColor(x+100, x, 0); // Black color for rectangles
+			setColor(offset, offset-i*2, 0);
+			//Draw Right triangles
+			fillRect(x_r, prev_y_rect_end_r, x_r + rect_width - 1, y_rect_end_r);
+		}
+		else{
+
+			//setColor(x, x+100, 0); // Black color for rectangles
+
+			setColor(offset-i*2, offset, 0);
+			//Draw left triangles
+			fillRect(x, prev_y_rect_end, x + rect_width - 1, y_rect_end);
+
+			setColor(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b);
+			//Draw Right triangles
+			fillRect(x_r, prev_y_rect_end_r, x_r + rect_width - 1, y_rect_end_r);
+		}
+
+
+	}
+	prev_incline = incline;
+
+	return;
+}
+
+
+
 
 
 //Ride View
@@ -534,6 +641,16 @@ void displayRideArrayPlot(float ride_array[ARRAY_PLOT_LENGTH], RideInfo ride_inf
 	return;
 }
 
+void clearRideArrayPlot(){
+	int x_min = 50;
+	int x_max = x_min + (ARRAY_PLOT_LENGTH * ARRAY_PLOT_POINT_WIDTH);
+	int y_min = 200;
+	int y_max = DISP_Y_SIZE - 20;
+	int y_mid = (y_max + y_min) / 2;
+	float mult = 0.5;
+	setColor(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b);
+	fillRect(x_min, y_min, x_max, y_max);
+}
 void displayRideCurIncline(float incline){
 
 	// Convert float to string
@@ -583,5 +700,11 @@ void displayInclineSensitivity(int num){
 	lcdPrint(buffer, 10, 10); // Pass the formatted string to lcdPrint
 	return;
 }
+
+//void displayInclineSlopeStart(){
+//	setColor(0, 0, 0); // Black color for rectangles
+//	fillRect(21, 200, 199, 290);
+//
+//}
 
 
